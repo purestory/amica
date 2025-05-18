@@ -1,0 +1,287 @@
+
+> amica@0.1.0 dev
+> npm run generate:paths && npm run build:workers && next dev
+
+
+> amica@0.1.0 generate:paths
+> npx node scripts/generate_paths.js
+
+
+> amica@0.1.0 build:workers
+> npm run build:worker:generateMeshBVH
+
+
+> amica@0.1.0 build:worker:generateMeshBVH
+> esbuild src/workers/bvh/generateMeshBVH.worker.js --bundle --minify --sourcemap --outfile=public/generateMeshBVH.worker.js
+
+
+  public/generateMeshBVH.worker.js      296.3kb
+  public/generateMeshBVH.worker.js.map    1.8mb
+
+⚡ Done in 58ms
+  ▲ Next.js 14.2.28
+  - Local:        http://localhost:3100
+  - Environments: .env.local
+  - Experiments (use with caution):
+    · instrumentationHook
+
+ ✓ Starting...
+ ✓ (pwa) Compiling for server...
+ ✓ (pwa) Compiling for server...
+ ✓ (pwa) Compiling for client (static)...
+ ○ (pwa) Service worker: /home/purestory/amica/public/sw.js
+ ○ (pwa)   URL: /sw.js
+ ○ (pwa)   Scope: /
+ ○ (pwa) Building in development mode, caching and precaching are disabled for the most part. This means that offline support is disabled, but you can continue developing other functions in service worker.
+ ○ Compiling /instrumentation ...
+ ✓ Compiled /instrumentation in 934ms (1006 modules)
+ ✓ Ready in 4.5s
+ ○ Compiling / ...
+ ✓ Compiled / in 4s (5702 modules)
+i18next: languageChanged en-US
+i18next: initialized {
+  debug: true,
+  initImmediate: true,
+  ns: [ 'translation' ],
+  defaultNS: [ 'translation' ],
+  fallbackLng: [ 'en' ],
+  fallbackNS: false,
+  supportedLngs: false,
+  nonExplicitSupportedLngs: false,
+  load: 'all',
+  preload: false,
+  simplifyPluralSuffix: true,
+  keySeparator: '.',
+  nsSeparator: ':',
+  pluralSeparator: '_',
+  contextSeparator: '_',
+  partialBundledLanguages: false,
+  saveMissing: false,
+  updateMissing: false,
+  saveMissingTo: 'fallback',
+  saveMissingPlurals: true,
+  missingKeyHandler: false,
+  missingInterpolationHandler: false,
+  postProcess: false,
+  postProcessPassResolved: false,
+  returnNull: false,
+  returnEmptyString: true,
+  returnObjects: false,
+  joinArrays: false,
+  returnedObjectHandler: false,
+  parseMissingKeyHandler: false,
+  appendNamespaceToMissingKey: false,
+  appendNamespaceToCIMode: false,
+  overloadTranslationOptionHandler: [Function: overloadTranslationOptionHandler],
+  interpolation: {
+    escapeValue: false,
+    format: [Function: bound format],
+    prefix: '{{',
+    suffix: '}}',
+    formatSeparator: ',',
+    unescapePrefix: '-',
+    nestingPrefix: '$t(',
+    nestingSuffix: ')',
+    nestingOptionsSeparator: ',',
+    maxReplaces: 1000,
+    skipOnVariables: true
+  },
+  resources: {
+    en: { nativeName: 'English', translation: [Object] },
+    zh: { nativeName: '中文', translation: [Object] },
+    de: { nativeName: 'Deutsch', translation: [Object] },
+    ka: { nativeName: 'ქართული', translation: [Object] }
+  },
+  ignoreJSONStructure: true
+}
+현재 설정 파일(config.json) 로드 완료
+ GET / 200 in 5334ms
+ GET / 200 in 428ms
+Failed to fetch server config: SyntaxError: Unexpected token '<', "<!doctype "... is not valid JSON
+    at JSON.parse (<anonymous>)
+    at parseJSONFromBytes (node:internal/deps/undici/undici:5738:19)
+    at successSteps (node:internal/deps/undici/undici:5719:27)
+    at fullyReadBody (node:internal/deps/undici/undici:4609:9)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async consumeBody (node:internal/deps/undici/undici:5728:7)
+    at async fetcher (webpack-internal:///./src/features/externalAPI/externalAPI.ts:56:36)
+    at async handleConfig (webpack-internal:///./src/features/externalAPI/externalAPI.ts:89:13)
+ ○ Compiling /_error ...
+ ✓ Compiled /_error in 1369ms (5702 modules)
+i18next: languageChanged en-US
+i18next: init: i18next is already initialized. You should call init just once!
+i18next: initialized {
+  debug: true,
+  initImmediate: true,
+  ns: [ 'translation' ],
+  defaultNS: [ 'translation' ],
+  fallbackLng: [ 'en' ],
+  fallbackNS: false,
+  supportedLngs: false,
+  nonExplicitSupportedLngs: false,
+  load: 'all',
+  preload: false,
+  simplifyPluralSuffix: true,
+  keySeparator: '.',
+  nsSeparator: ':',
+  pluralSeparator: '_',
+  contextSeparator: '_',
+  partialBundledLanguages: false,
+  saveMissing: false,
+  updateMissing: false,
+  saveMissingTo: 'fallback',
+  saveMissingPlurals: true,
+  missingKeyHandler: false,
+  missingInterpolationHandler: false,
+  postProcess: false,
+  postProcessPassResolved: false,
+  returnNull: false,
+  returnEmptyString: true,
+  returnObjects: false,
+  joinArrays: false,
+  returnedObjectHandler: false,
+  parseMissingKeyHandler: false,
+  appendNamespaceToMissingKey: false,
+  appendNamespaceToCIMode: false,
+  overloadTranslationOptionHandler: [Function: overloadTranslationOptionHandler],
+  interpolation: {
+    escapeValue: false,
+    format: [Function: bound format],
+    prefix: '{{',
+    suffix: '}}',
+    formatSeparator: ',',
+    unescapePrefix: '-',
+    nestingPrefix: '$t(',
+    nestingSuffix: ')',
+    nestingOptionsSeparator: ',',
+    maxReplaces: 1000,
+    skipOnVariables: true
+  },
+  resources: {
+    en: { nativeName: 'English', translation: [Object] },
+    zh: { nativeName: '中文', translation: [Object] },
+    de: { nativeName: 'Deutsch', translation: [Object] },
+    ka: { nativeName: 'ქართული', translation: [Object] }
+  },
+  ignoreJSONStructure: true
+}
+ ⚠ You have added a custom /_error page without a custom /404 page. This prevents the 404 page from being auto statically optimized.
+See here for info: https://nextjs.org/docs/messages/custom-error-no-custom-404
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 1397ms
+현재 설정 파일(config.json) 로드 완료
+ GET / 200 in 54ms
+Failed to fetch server config: SyntaxError: Unexpected token '<', "<!doctype "... is not valid JSON
+    at JSON.parse (<anonymous>)
+    at parseJSONFromBytes (node:internal/deps/undici/undici:5738:19)
+    at successSteps (node:internal/deps/undici/undici:5719:27)
+    at fullyReadBody (node:internal/deps/undici/undici:4609:9)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async consumeBody (node:internal/deps/undici/undici:5728:7)
+    at async fetcher (webpack-internal:///./src/features/externalAPI/externalAPI.ts:56:36)
+    at async handleConfig (webpack-internal:///./src/features/externalAPI/externalAPI.ts:89:13)
+ GET / 200 in 6ms
+ HEAD / 200 in 6ms
+ GET /404.html 404 in 11ms
+ ✓ Compiled in 833ms (5702 modules)
+i18next: languageChanged en-US
+i18next: init: i18next is already initialized. You should call init just once!
+i18next: initialized {
+  debug: true,
+  initImmediate: true,
+  ns: [ 'translation' ],
+  defaultNS: [ 'translation' ],
+  fallbackLng: [ 'en' ],
+  fallbackNS: false,
+  supportedLngs: false,
+  nonExplicitSupportedLngs: false,
+  load: 'all',
+  preload: false,
+  simplifyPluralSuffix: true,
+  keySeparator: '.',
+  nsSeparator: ':',
+  pluralSeparator: '_',
+  contextSeparator: '_',
+  partialBundledLanguages: false,
+  saveMissing: false,
+  updateMissing: false,
+  saveMissingTo: 'fallback',
+  saveMissingPlurals: true,
+  missingKeyHandler: false,
+  missingInterpolationHandler: false,
+  postProcess: false,
+  postProcessPassResolved: false,
+  returnNull: false,
+  returnEmptyString: true,
+  returnObjects: false,
+  joinArrays: false,
+  returnedObjectHandler: false,
+  parseMissingKeyHandler: false,
+  appendNamespaceToMissingKey: false,
+  appendNamespaceToCIMode: false,
+  overloadTranslationOptionHandler: [Function: overloadTranslationOptionHandler],
+  interpolation: {
+    escapeValue: false,
+    format: [Function: bound format],
+    prefix: '{{',
+    suffix: '}}',
+    formatSeparator: ',',
+    unescapePrefix: '-',
+    nestingPrefix: '$t(',
+    nestingSuffix: ')',
+    nestingOptionsSeparator: ',',
+    maxReplaces: 1000,
+    skipOnVariables: true
+  },
+  resources: {
+    en: { nativeName: 'English', translation: [Object] },
+    zh: { nativeName: '中文', translation: [Object] },
+    de: { nativeName: 'Deutsch', translation: [Object] },
+    ka: { nativeName: 'ქართული', translation: [Object] }
+  },
+  ignoreJSONStructure: true
+}
+현재 설정 파일(config.json) 로드 완료
+ GET / 200 in 58ms
+Failed to fetch server config: SyntaxError: Unexpected token '<', "<!doctype "... is not valid JSON
+    at JSON.parse (<anonymous>)
+    at parseJSONFromBytes (node:internal/deps/undici/undici:5738:19)
+    at successSteps (node:internal/deps/undici/undici:5719:27)
+    at fullyReadBody (node:internal/deps/undici/undici:4609:9)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async consumeBody (node:internal/deps/undici/undici:5728:7)
+    at async fetcher (webpack-internal:///./src/features/externalAPI/externalAPI.ts:56:36)
+    at async handleConfig (webpack-internal:///./src/features/externalAPI/externalAPI.ts:89:13)
+ GET / 200 in 9ms
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 9ms
+ GET / 200 in 8ms
+ GET / 200 in 7ms
+ HEAD / 200 in 8ms
+ GET / 200 in 9ms
+ HEAD / 200 in 5ms
+ GET / 200 in 8ms
+ GET /webui/ 404 in 7ms
+ GET / 200 in 6ms
+ GET /.env.bak 404 in 7ms
+ GET /.env.local 404 in 6ms
+ GET /.env.default 404 in 7ms
+ GET /.env.dev.local 404 in 5ms
+ GET /.env.template 404 in 6ms
+ GET /404.html 404 in 6ms
+ GET /.env.ci 404 in 6ms
+ GET /.env.dist 404 in 6ms
+ GET /.env.live 404 in 5ms
+ GET /.env.preprod 404 in 7ms
+ GET /.env.production.local 404 in 6ms
+ GET /config/.env 404 in 6ms
+ GET /.env.config 404 in 6ms
+ GET /.env.prod 404 in 5ms
+ GET /api/.env 404 in 5ms
+ GET /prod/.env 404 in 6ms
+ GET /.env.development.local 404 in 6ms
+ GET /.env.sandbox 404 in 5ms
+ GET /geoserver/web/ 404 in 6ms
+ GET /.env.secret 404 in 6ms
+ GET /.env.production 404 in 7ms
+ GET /.env_sample 404 in 6ms
+ GET /settings/.env 404 in 6ms
+ GET /.env.uat 404 in 5ms
