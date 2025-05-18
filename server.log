@@ -70,3 +70,49 @@ Failed to fetch server config: SyntaxError: Unexpected token '<', "<!doctype "..
  GET / 200 in 6ms
  HEAD / 200 in 6ms
  ✓ Compiled in 693ms (4489 modules)
+ ⚠ Found a change in next.config.js. Restarting the server to apply the changes...
+  ▲ Next.js 14.2.28
+  - Local:        http://localhost:3100
+  - Environments: .env.local
+
+ ✓ Starting...
+ ✓ (pwa) Compiling for server...
+ ✓ (pwa) Compiling for server...
+ ✓ (pwa) Compiling for client (static)...
+ ○ (pwa) Service worker: /home/purestory/amica/public/sw.js
+ ○ (pwa)   URL: /sw.js
+ ○ (pwa)   Scope: /
+ ○ (pwa) Building in development mode, caching and precaching are disabled for the most part. This means that offline support is disabled, but you can continue developing other functions in service worker.
+ ✓ Ready in 2.7s
+ ○ Compiling /_error ...
+ ✓ Compiled /_error in 15.5s (4888 modules)
+ ⚠ You have added a custom /_error page without a custom /404 page. This prevents the 404 page from being auto statically optimized.
+See here for info: https://nextjs.org/docs/messages/custom-error-no-custom-404
+ GET /_next/static/webpack/cb38feed9457e4d7.webpack.hot-update.json 404 in 15849ms
+현재 설정 파일(config.json) 로드 완료
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ GET / 200 in 16374ms
+Failed to fetch server config: SyntaxError: Unexpected token '<', "<!doctype "... is not valid JSON
+    at JSON.parse (<anonymous>)
+    at parseJSONFromBytes (node:internal/deps/undici/undici:5738:19)
+    at successSteps (node:internal/deps/undici/undici:5719:27)
+    at fullyReadBody (node:internal/deps/undici/undici:4609:9)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async consumeBody (node:internal/deps/undici/undici:5728:7)
+    at async fetcher (webpack-internal:///./src/features/externalAPI/externalAPI.ts:56:36)
+    at async handleConfig (webpack-internal:///./src/features/externalAPI/externalAPI.ts:89:13)
+ GET / 200 in 7ms
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 4ms
+ ✓ Compiled in 438ms (4888 modules)
+현재 설정 파일(config.json) 로드 완료
+ GET / 200 in 53ms
+Failed to fetch server config: SyntaxError: Unexpected token '<', "<!doctype "... is not valid JSON
+    at JSON.parse (<anonymous>)
+    at parseJSONFromBytes (node:internal/deps/undici/undici:5738:19)
+    at successSteps (node:internal/deps/undici/undici:5719:27)
+    at fullyReadBody (node:internal/deps/undici/undici:4609:9)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async consumeBody (node:internal/deps/undici/undici:5728:7)
+    at async fetcher (webpack-internal:///./src/features/externalAPI/externalAPI.ts:56:36)
+    at async handleConfig (webpack-internal:///./src/features/externalAPI/externalAPI.ts:89:13)
+ ✓ Compiled in 656ms (4481 modules)
