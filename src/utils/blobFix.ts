@@ -305,31 +305,48 @@ function padHex(hex: string) {
 
 class WebmFloat extends WebmBase<number> {
   constructor(name: string, type: string) {
-    super(name, type || "Float");
+    super(name, type);
   }
 
   getFloatArrayType() {
-    return this.source && this.source.length === 4
-      ? Float32Array
-      : Float64Array;
+    if (typeof window !== "undefined") {
+      return window.BigInt64Array ?? window.Float64Array;
+    }
+    return typeof BigInt64Array !== "undefined" ? BigInt64Array : Float64Array;
   }
+
   updateBySource() {
-    const byteArray = this.source!.reverse();
-    const floatArrayType = this.getFloatArrayType();
-    const floatArray = new floatArrayType(byteArray.buffer);
-    this.data! = floatArray[0];
+    if (!this.source) {
+      return;
+    }
+
+    // DataView를 사용하여 직접 Float64 값을 읽어옴
+    const dataView = new DataView(this.source.buffer, this.source.byteOffset, this.source.byteLength);
+    
+    // 소스 길이에 따라 Float32 또는 Float64 값 읽기
+    if (this.source.length === 4) {
+      this.data = dataView.getFloat32(0, true); // little endian
+    } else {
+      this.data = dataView.getFloat64(0, true); // little endian
+    }
   }
+
   updateByData() {
-    const floatArrayType = this.getFloatArrayType();
-    const floatArray = new floatArrayType([this.data!]);
-    const byteArray = new Uint8Array(floatArray.buffer);
-    this.source = byteArray.reverse();
+    if (typeof this.data === "undefined") {
+      return;
+    }
+
+    const ArrayType = this.getFloatArrayType();
+    const view = new ArrayType(1);
+    view[0] = this.data;
+    this.source = new Uint8Array(view.buffer);
   }
+
   getValue() {
     return this.data;
   }
   setValue(value: number) {
-    this.setData(value);
+    this.data = value;
   }
 }
 
@@ -459,53 +476,36 @@ class WebmFile extends WebmContainer {
   }
 
   fixDuration(duration: number) {
-    const segmentSection = this.getSectionById(0x8538067) as WebmContainer;
+    const segmentSection = this.getSectionById(0x8538067);
     if (!segmentSection) {
-      return false;
+      return this;
     }
 
-    const infoSection = segmentSection.getSectionById(
-      0x549a966,
-    ) as WebmContainer;
+    const infoSection = segmentSection.data.getSectionById(0x549a966);
     if (!infoSection) {
-      return false;
+      return this;
     }
 
-    const timeScaleSection = infoSection.getSectionById(
-      0xad7b1,
-    ) as WebmFloat;
-    if (!timeScaleSection) {
-      return false;
-    }
-
-    let durationSection = infoSection.getSectionById(0x489) as WebmFloat;
-    if (durationSection) {
-      if (durationSection.getValue()! <= 0) {
-        durationSection.setValue(duration);
-      } else {
-        return false;
-      }
-    } else {
-      // append Duration section
-      durationSection = new WebmFloat("Duration", "Float");
-      durationSection.setValue(duration);
-      infoSection.data.push({
+    let durationSection = infoSection.data.getSectionById(0x489);
+    if (!durationSection) {
+      const data = new WebmFloat("Duration", "Float");
+      data.setValue(duration);
+      infoSection.data.data.push({
         id: 0x489,
-        data: durationSection,
+        data,
       });
+    } else {
+      (durationSection.data as WebmFloat).setValue(duration);
     }
-
-    // set default time scale to 1 millisecond (1000000 nanoseconds)
-    timeScaleSection.setValue(1000000);
-    infoSection.updateByData();
-    segmentSection.updateByData();
-    this.updateByData();
-
-    return true;
+    return this;
   }
 
   toBlob(type = "video/webm") {
-    return new Blob([this.source!.buffer], { type });
+    this.updateByData();
+    // 타입 문제 해결: ArrayBuffer를 명시적으로 Uint8Array로 변환 후 다시 Blob으로 변환
+    const buffer = this.source as Uint8Array;
+    // Blob 생성자에 전달할 때 타입 호환성 문제 해결
+    return new Blob([new Uint8Array(buffer)], { type });
   }
 }
 
@@ -524,26 +524,25 @@ export const webmFixDuration = (
   return new Promise((resolve, reject) => {
     try {
       const reader = new FileReader();
-
-      reader.addEventListener("loadend", () => {
+      reader.addEventListener('loadend', () => {
         try {
-          const result = reader.result as ArrayBuffer;
-          const file = new WebmFile(new Uint8Array(result));
-          if (file.fixDuration(duration)) {
+          // FileReader.result는 string 또는 ArrayBuffer 타입일 수 있음
+          const result = reader.result;
+          if (result instanceof ArrayBuffer) {
+            const file = new WebmFile(new Uint8Array(result));
+            file.fixDuration(duration);
             resolve(file.toBlob(type));
           } else {
-            resolve(blob);
+            reject(new Error('FileReader result is not an ArrayBuffer'));
           }
-        } catch (ex) {
-          reject(ex);
+        } catch (e) {
+          reject(e);
         }
       });
-
-      reader.addEventListener("error", () => reject());
-
+      reader.addEventListener('error', () => reject(reader.error));
       reader.readAsArrayBuffer(blob);
-    } catch (ex) {
-      reject(ex);
+    } catch (e) {
+      reject(e);
     }
   });
 };

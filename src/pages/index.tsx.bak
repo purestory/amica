@@ -61,10 +61,9 @@ import { AmicaLifeContext } from "@/features/amicaLife/amicaLifeContext";
 import { ChatModeText } from "@/components/chatModeText";
 
 import { TimestampedPrompt } from "@/features/amicaLife/eventHandler";
-import { handleChatLogs } from "@/features/externalAPI/externalAPI";
+import { handleChatLogs, isLocalhost } from "@/features/externalAPI/externalAPI";
 import { VerticalSwitchBox } from "@/components/switchBox";
 import { ThoughtText } from "@/components/thoughtText";
-import { langs } from '@/utils/i18n-stubs';
 
 // 로컬 폰트 변수 정의 (CSS 변수 사용)
 const fontClasses = {
@@ -107,16 +106,6 @@ function detectVRHeadset() {
   return deviceInfo;
 }
 
-// 현재 호스트가 로컬호스트인지 확인하는 함수
-function isLocalhost() {
-  if (typeof window !== 'undefined') {
-    const hostname = window.location.hostname;
-    return hostname === 'localhost' || 
-           hostname === '127.0.0.1' ||
-           hostname.startsWith('192.168.');
-  }
-  return false;
-}
 
 export default function Home() {
   const { t, i18n } = useTranslation();
@@ -426,6 +415,7 @@ export default function Home() {
         {showSettings && (
           <Settings
             onClickClose={() => setShowSettings(false)}
+            externalAccess={!isLocalhost()}
           />
         )}
       </VrmStoreProvider>
@@ -442,6 +432,22 @@ export default function Home() {
               onClick={() => setShowSettings(true)}
               label="show settings"
             />
+
+            {showChatLog ? (
+              <MenuButton
+                large={isVRHeadset}
+                icon={ChatBubbleLeftIcon}
+                onClick={toggleChatLog}
+                label="hide chat log"
+              />
+            ) : (
+              <MenuButton
+                large={isVRHeadset}
+                icon={ChatBubbleLeftRightIcon}
+                onClick={toggleChatLog}
+                label="show chat log"
+              />
+            )}
 
             { muted ? (
               <MenuButton

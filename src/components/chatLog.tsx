@@ -98,32 +98,6 @@ export const ChatLog = ({
 
   return (
     <>
-      <div className="absolute left-12 top-4 z-10">
-        <IconButton
-          iconName="24/ReloadLoop"
-          label={t("Restart")}
-          isProcessing={false}
-          className="bg-slate-600 hover:bg-slate-500 active:bg-slate-500 shadow-xl"
-          onClick={() => {
-            bot.setMessageList([]);
-          }}
-        ></IconButton>
-        <IconButton
-          iconName="24/UploadAlt"
-          label={t("Load Chat")}
-          isProcessing={false}
-          className="bg-slate-600 hover:bg-slate-500 active:bg-slate-500 shadow-xl"
-          onClick={handleClickOpenTxtFile}
-        ></IconButton>
-        <IconButton
-          iconName="24/Save"
-          label={t("Save")}
-          isProcessing={false}
-          className="bg-slate-600 hover:bg-slate-500 active:bg-slate-500 shadow-xl"
-          onClick={() => exportMessagesToTxt(messages)}
-        ></IconButton>
-      </div>
-
       <div className="fixed w-col-span-6 max-w-full h-full pb-16">
 
         <div className="max-h-full px-16 pt-20 pb-4 overflow-y-auto scroll-hidden">
