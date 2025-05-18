@@ -69,3 +69,4 @@ Failed to fetch server config: SyntaxError: Unexpected token '<', "<!doctype "..
     at async handleConfig (webpack-internal:///./src/features/externalAPI/externalAPI.ts:89:13)
  GET / 200 in 6ms
  HEAD / 200 in 6ms
+ ✓ Compiled in 693ms (4489 modules)
