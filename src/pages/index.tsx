@@ -8,8 +8,7 @@ import {
 import Link from "next/link";
 import { Menu, Transition } from '@headlessui/react'
 import { clsx } from "clsx";
-import { M_PLUS_2, Montserrat } from "next/font/google";
-import { useTranslation, Trans } from 'react-i18next';
+import { useTranslation, Trans } from '@/utils/i18n-stubs';
 import {
   ChatBubbleLeftIcon,
   ChatBubbleLeftRightIcon,
@@ -47,6 +46,8 @@ import { DebugPane } from "@/components/debugPane";
 import { Settings } from "@/components/settings";
 import { EmbeddedWebcam } from "@/components/embeddedWebcam";
 import { Moshi } from "@/features/moshi/components/Moshi";
+import WasmCacheInitializer from "@/components/wasmCacheInitializer";
+import FontCacheInitializer from "@/components/fontCacheInitializer";
 
 import { ViewerContext } from "@/features/vrmViewer/viewerContext";
 import { Message, Role } from "@/features/chat/messages";
@@ -55,7 +56,6 @@ import { AlertContext } from "@/features/alert/alertContext";
 
 import { config, updateConfig } from '@/utils/config';
 import { isTauri } from '@/utils/isTauri';
-import { langs } from '@/i18n/langs';
 import { VrmStoreProvider } from "@/features/vrmStore/vrmStoreContext";
 import { AmicaLifeContext } from "@/features/amicaLife/amicaLifeContext";
 import { ChatModeText } from "@/components/chatModeText";
@@ -64,18 +64,13 @@ import { TimestampedPrompt } from "@/features/amicaLife/eventHandler";
 import { handleChatLogs } from "@/features/externalAPI/externalAPI";
 import { VerticalSwitchBox } from "@/components/switchBox";
 import { ThoughtText } from "@/components/thoughtText";
+import { langs } from '@/utils/i18n-stubs';
 
-const m_plus_2 = M_PLUS_2({
-  variable: "--font-m-plus-2",
-  display: "swap",
-  preload: false,
-});
-
-const montserrat = Montserrat({
-  variable: "--font-montserrat",
-  display: "swap",
-  subsets: ["latin"],
-});
+// 로컬 폰트 변수 정의 (CSS 변수 사용)
+const fontClasses = {
+  mplus2: "font-mplus2",
+  montserrat: "font-montserrat",
+};
 
 function detectVRHeadset() {
   const userAgent = navigator.userAgent.toLowerCase();
@@ -112,6 +107,16 @@ function detectVRHeadset() {
   return deviceInfo;
 }
 
+// 현재 호스트가 로컬호스트인지 확인하는 함수
+function isLocalhost() {
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    return hostname === 'localhost' || 
+           hostname === '127.0.0.1' ||
+           hostname.startsWith('192.168.');
+  }
+  return false;
+}
 
 export default function Home() {
   const { t, i18n } = useTranslation();
@@ -142,6 +147,10 @@ export default function Home() {
   const [showSubconciousText, setShowSubconciousText] = useState(false);
   const [showMoshi, setShowMoshi] = useState(false);
 
+  // 로컬 스토리지에서 채팅 관련 상태 키 상수
+  const CHAT_MODE_STORAGE_KEY = 'chatvrm_chat_mode_enabled';
+  const CHAT_LOG_STORAGE_KEY = 'chatvrm_chat_log_visible';
+
   // null indicates havent loaded config yet
   const [muted, setMuted] = useState<boolean|null>(null);
   const [webcamEnabled, setWebcamEnabled] = useState(false);
@@ -166,6 +175,19 @@ export default function Home() {
     }
 
     setShowArbiusIntroduction(config("show_arbius_introduction") === 'true');
+
+    // 로컬 스토리지에서 채팅 관련 상태 불러오기
+    if (typeof window !== 'undefined') {
+      const savedChatMode = localStorage.getItem(CHAT_MODE_STORAGE_KEY);
+      if (savedChatMode !== null) {
+        setShowChatMode(savedChatMode === 'true');
+      }
+      
+      const savedChatLog = localStorage.getItem(CHAT_LOG_STORAGE_KEY);
+      if (savedChatLog !== null) {
+        setShowChatLog(savedChatLog === 'true');
+      }
+    }
 
     if (config("bg_color") !== '') {
       document.body.style.backgroundColor = config("bg_color");
@@ -214,7 +236,22 @@ export default function Home() {
   };
   
   const toggleChatLog = () => {
-    toggleState(setShowChatLog, [setShowSubconciousText, setShowChatMode]);
+    setShowChatLog(prev => {
+      // 다른 상태 false로 설정
+      setShowSubconciousText(false);
+      setShowChatMode(false);
+      
+      // 새로운 상태 값
+      const newState = !prev;
+      
+      // 로컬 스토리지에 저장
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(CHAT_LOG_STORAGE_KEY, String(newState));
+        console.log('채팅 로그 상태 저장:', newState);
+      }
+      
+      return newState;
+    });
   };
   
   const toggleShowSubconciousText = () => {
@@ -224,7 +261,22 @@ export default function Home() {
   };
   
   const toggleChatMode = () => {
-    toggleState(setShowChatMode, [setShowChatLog, setShowSubconciousText]);
+    setShowChatMode(prev => {
+      // 다른 상태 false로 설정
+      setShowChatLog(false);
+      setShowSubconciousText(false);
+      
+      // 새로운 상태 값
+      const newState = !prev;
+      
+      // 로컬 스토리지에 저장
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(CHAT_MODE_STORAGE_KEY, String(newState));
+        console.log('채팅 모드 상태 저장:', newState);
+      }
+      
+      return newState;
+    });
   };
 
   const toggleXR = async (immersiveType: XRSessionMode) => {
@@ -336,8 +388,8 @@ export default function Home() {
 
   return (
     <div className={clsx(
-      m_plus_2.variable,
-      montserrat.variable,
+      fontClasses.mplus2,
+      fontClasses.montserrat,
     )}>
       {showStreamWindow && 
 
@@ -423,119 +475,87 @@ export default function Home() {
               />
             )}
 
-            { webcamEnabled ? (
-              <MenuButton
-                large={isVRHeadset}
-                icon={VideoCameraIcon}
-                onClick={() => setWebcamEnabled(false)}
-                label="disable webcam"
-              />
-            ) : (
-              <MenuButton
-                large={isVRHeadset}
-                icon={VideoCameraSlashIcon}
-                onClick={() => setWebcamEnabled(true)}
-                label="enable webcam"
-              />
+            {/* 외부 접속시에는 아래 버튼들을 숨김 */}
+            {isLocalhost() && (
+              <>
+                { webcamEnabled ? (
+                  <MenuButton
+                    large={isVRHeadset}
+                    icon={VideoCameraIcon}
+                    onClick={() => setWebcamEnabled(false)}
+                    label="disable webcam"
+                  />
+                ) : (
+                  <MenuButton
+                    large={isVRHeadset}
+                    icon={VideoCameraSlashIcon}
+                    onClick={() => setWebcamEnabled(true)}
+                    label="enable webcam"
+                  />
+                )}
+
+                <MenuButton
+                  large={isVRHeadset}
+                  icon={ShareIcon}
+                  href="/share"
+                  target={isTauri() ? '' : '_blank'}
+                  label="share"
+                />
+                <MenuButton
+                  large={isVRHeadset}
+                  icon={CloudArrowDownIcon}
+                  href="/import"
+                  label="import"
+                />
+
+                { showSubconciousText ? (
+                  <MenuButton
+                    large={isVRHeadset}
+                    icon={IconBrain}
+                    onClick={toggleShowSubconciousText}
+                    label="hide subconscious"
+                  />
+                ) : (
+                  <MenuButton
+                    large={isVRHeadset}
+                    icon={IconBrain}
+                    onClick={toggleShowSubconciousText}
+                    label="show subconscious"
+                  />
+                )}
+
+                <MenuButton
+                  large={isVRHeadset}
+                  icon={CodeBracketSquareIcon}
+                  onClick={() => setShowDebug(true)}
+                  label="debug"
+                />
+
+                <div className="flex flex-row items-center space-x-2">
+                    <VerticalSwitchBox
+                      value={showChatMode}
+                      label={""}
+                      onChange={toggleChatMode}
+                    />
+                </div>
+
+                <div className="flex flex-row items-center space-x-2">
+                  { showStreamWindow ? (
+                    <SignalIcon
+                      className="h-7 w-7 text-white opacity-100 hover:opacity-50 active:opacity-100 hover:cursor-pointer"
+                      aria-hidden="true"
+                      onClick={() => setShowStreamWindow(false)}
+                    />
+                  ) : (
+                    <SignalIcon
+                      className="h-7 w-7 text-white opacity-50 hover:opacity-100 active:opacity-100 hover:cursor-pointer"
+                      aria-hidden="true"
+                      onClick={() => setShowStreamWindow(true)}
+                    />
+                  )}
+                </div>
+              </>
             )}
-
-            <MenuButton
-              large={isVRHeadset}
-              icon={ShareIcon}
-              href="/share"
-              target={isTauri() ? '' : '_blank'}
-              label="share"
-            />
-            <MenuButton
-              large={isVRHeadset}
-              icon={CloudArrowDownIcon}
-              href="/import"
-              label="import"
-            />
-
-            { showSubconciousText ? (
-              <MenuButton
-                large={isVRHeadset}
-                icon={IconBrain}
-                onClick={toggleShowSubconciousText}
-                label="hide subconscious"
-              />
-            ) : (
-              <MenuButton
-                large={isVRHeadset}
-                icon={IconBrain}
-                onClick={toggleShowSubconciousText}
-                label="show subconscious"
-              />
-            )}
-
-            {/* Temp Disable : WebXR */}
-            {/*<MenuButton
-              large={isVRHeadset}
-              icon={CubeTransparentIcon}
-              disabled={!isARSupported}
-              onClick={() => toggleXR('immersive-ar')}
-              label="Augmented Reality"
-            />
-
-            <MenuButton
-              large={isVRHeadset}
-              icon={CubeIcon}
-              disabled={!isVRSupported}
-              onClick={() => toggleXR('immersive-vr')}
-              label="Virtual Reality"
-            />*/}
-
-            <MenuButton
-              large={isVRHeadset}
-              icon={CodeBracketSquareIcon}
-              onClick={() => setShowDebug(true)}
-              label="debug"
-            />
-
-            {/* Temp Disable : WebXR */}
-            {/* { showChatMode ? (
-              <MenuButton
-                large={isVRHeadset}
-                icon={Squares2X2Icon}
-                disabled={viewer.currentSession !== null}
-                onClick={toggleChatMode}
-                label="hide chat mode"
-              />
-            ) : (
-              <MenuButton
-                large={isVRHeadset}
-                icon={SquaresPlusIcon}
-                disabled={viewer.currentSession !== null}
-                onClick={toggleChatMode}
-                label="show chat mode"
-              />
-            )} */}
-
-            <div className="flex flex-row items-center space-x-2">
-                <VerticalSwitchBox
-                  value={showChatMode}
-                  label={""}
-                  onChange={toggleChatMode}
-                />
-            </div>
-
-            <div className="flex flex-row items-center space-x-2">
-              { showStreamWindow ? (
-                <SignalIcon
-                  className="h-7 w-7 text-white opacity-100 hover:opacity-50 active:opacity-100 hover:cursor-pointer"
-                  aria-hidden="true"
-                  onClick={() => setShowStreamWindow(false)}
-                />
-              ) : (
-                <SignalIcon
-                  className="h-7 w-7 text-white opacity-50 hover:opacity-100 active:opacity-100 hover:cursor-pointer"
-                  aria-hidden="true"
-                  onClick={() => setShowStreamWindow(true)}
-                />
-              )}
-            </div>
-            
           </div>
         </div>    
       </div>
@@ -563,6 +583,9 @@ export default function Home() {
       {/* Subconcious stored prompt text */}
       {showSubconciousText && <SubconciousText messages={subconciousLogs}/>}
 
+      <WasmCacheInitializer />
+      <FontCacheInitializer />
+      
       <AddToHomescreen />
 
       <Alert />

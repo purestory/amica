@@ -1,4 +1,4 @@
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from '@/utils/i18n-stubs';
 
 import { Viewer } from "@/features/vrmViewer/viewer";
 import { BasicPage, FormRow, basename } from "./common";

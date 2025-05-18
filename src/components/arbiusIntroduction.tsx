@@ -1,7 +1,7 @@
 import { useAccount } from 'wagmi'
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useState } from "react";
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from '@/utils/i18n-stubs';
 
 export const ArbiusIntroduction = ({ open, close }: {
   open: boolean;

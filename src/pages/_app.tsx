@@ -1,4 +1,5 @@
-import '@/i18n';
+// import '@/utils/i18n-stubs';
+import '@/utils/i18n-stubs';
 
 import '@rainbow-me/rainbowkit/styles.css';
 import "@/styles/globals.css";

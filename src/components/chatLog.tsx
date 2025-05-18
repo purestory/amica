@@ -1,4 +1,4 @@
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from '@/utils/i18n-stubs';
 import { clsx } from "clsx";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import FlexTextarea from "@/components/flexTextarea/flexTextarea";

@@ -1,5 +1,5 @@
-import { useTranslation } from 'react-i18next';
-import { langs } from '@/i18n/langs';
+import { useTranslation } from '@/utils/i18n-stubs';
+import { langs } from '@/utils/i18n-stubs';
 
 interface Props {
   goBack: () => void;

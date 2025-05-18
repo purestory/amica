@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { TimestampedPrompt } from "@/features/amicaLife/eventHandler";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from '@/utils/i18n-stubs';
 import { IconBrain } from '@tabler/icons-react';
 
 export const SubconciousText = ({ messages }: { messages: TimestampedPrompt[] }) => {

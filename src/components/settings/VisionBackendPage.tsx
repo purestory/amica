@@ -1,4 +1,4 @@
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from '@/utils/i18n-stubs';
 
 import { BasicPage, FormRow, Link, getLinkFromPage } from './common';
 import { updateConfig } from "@/utils/config";

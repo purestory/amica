@@ -1,4 +1,4 @@
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from '@/utils/i18n-stubs';
 import { useEffect, useState } from 'react';
 import { getWindowAI } from "window.ai";
 import { BasicPage, Link, FormRow, getLinkFromPage } from './common';

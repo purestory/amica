@@ -1,4 +1,4 @@
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from '@/utils/i18n-stubs';
 
 import { Fragment, useEffect, useState } from "react";
 import { Transition } from '@headlessui/react';

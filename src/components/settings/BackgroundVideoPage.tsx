@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from '@/utils/i18n-stubs';
 
 import { BasicPage, FormRow, ResetToDefaultButton } from "./common";
 import { updateConfig, defaultConfig } from "@/utils/config";

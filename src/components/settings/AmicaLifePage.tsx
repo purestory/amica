@@ -1,4 +1,4 @@
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from '@/utils/i18n-stubs';
 
 import { basename, BasicPage, FormRow } from './common';
 import { config, updateConfig } from "@/utils/config";

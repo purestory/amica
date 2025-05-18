@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from '@/utils/i18n-stubs';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { updateConfig, defaultConfig } from '@/utils/config';

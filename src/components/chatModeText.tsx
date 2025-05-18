@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { clsx } from "clsx";
 import { config } from "@/utils/config";
 import { IconButton } from "./iconButton";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from '@/utils/i18n-stubs';
 import { Message } from "@/features/chat/messages";
 
 export const ChatModeText = ({ messages }: { messages: Message[] }) => {

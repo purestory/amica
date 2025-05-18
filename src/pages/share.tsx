@@ -2,7 +2,7 @@ import { createHash } from 'crypto';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useContext, useState, useEffect, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from '@/utils/i18n-stubs';
 
 import { config, updateConfig } from '@/utils/config';
 import { isTauri } from '@/utils/isTauri';

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from '@/utils/i18n-stubs';
 import { IconButton } from '@/components/iconButton';
 import { useRouter } from 'next/router';
 

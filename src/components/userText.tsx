@@ -1,4 +1,4 @@
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from '@/utils/i18n-stubs';
 import { useEffect, useRef } from "react";
 
 export const UserText = ({ message }: { message: string }) => {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from '@/utils/i18n-stubs';
 import { BasicPage, FormRow, NotUsingAlert } from './common';
 import { TextInput } from "@/components/textInput";
 import { config, updateConfig } from "@/utils/config";
