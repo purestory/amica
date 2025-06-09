@@ -7,6 +7,7 @@ import { animationList } from "@/paths";
 import { updateConfig } from "@/utils/config";
 import { loadMixamoAnimation } from "@/lib/VRMAnimation/loadMixamoAnimation";
 import { loadVRMAnimation } from "@/lib/VRMAnimation/loadVRMAnimation";
+import { buildUrl } from "@/utils/buildUrl";
 
 export function CharacterAnimationPage({
   viewer,
@@ -57,9 +58,10 @@ export function CharacterAnimationPage({
                 updateConfig("animation_url", url);
                 setSettingsUpdated(true);
                 // @ts-ignore
+                const animationUrlWithPath = buildUrl(url);
                 const animation = url.indexOf("vrma") > 0
-                  ? await loadVRMAnimation(url)
-                  : await loadMixamoAnimation(url, viewer.model!.vrm!);
+                  ? await loadVRMAnimation(animationUrlWithPath)
+                  : await loadMixamoAnimation(animationUrlWithPath, viewer.model!.vrm!);
 
                 // @ts-ignore
                 viewer.model!.loadAnimation(animation);

@@ -1,3 +1,5 @@
+import { serverConfig } from '@/features/externalAPI/externalAPI';
+
 export default async function handler(req, res) {
   const { method, body } = req;
   
@@ -6,7 +8,10 @@ export default async function handler(req, res) {
   }
   
   try {
-    const response = await fetch('http://localhost:11434/api/chat', {
+    // serverConfig에서 ollama_url 가져오기, 없으면 기본값 사용
+    const ollamaUrl = serverConfig.ollama_url || 'http://localhost:11434';
+    
+    const response = await fetch(`${ollamaUrl}/api/chat`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

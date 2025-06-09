@@ -174,7 +174,7 @@ export class Model {
           vrm.scene.name = "VRMRoot";
 
           VRMUtils.removeUnnecessaryVertices(gltf.scene);
-          VRMUtils.removeUnnecessaryJoints(gltf.scene);
+          // VRMUtils.combineSkeletons(gltf.scene); // 존재하지 않는 메서드
 
           // await downscaleModelTextures(gltf, 128);
 

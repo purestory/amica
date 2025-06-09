@@ -91,10 +91,29 @@ export function basename(path: string) {
   return a[a.length - 1];
 }
 
+export function getBasePath(): string {
+  if (typeof window !== 'undefined') {
+    const pathname = window.location.pathname;
+    // pathname이 /amica/로 시작하면 basePath는 /amica
+    if (pathname.startsWith('/amica/') || pathname === '/amica') {
+      return '/amica';
+    }
+  }
+  return '';
+}
+
 export function thumbPrefix(path: string) {
+  const basePath = getBasePath();
   const a = path.split("/");
   a[a.length - 1] = "thumb-" + a[a.length - 1];
-  return a.join("/");
+  const fullPath = a.join("/");
+  
+  // 이미 basePath가 포함되어 있지 않으면 추가
+  if (basePath && !fullPath.startsWith(basePath)) {
+    return basePath + fullPath;
+  }
+  
+  return fullPath;
 }
 
 export function hashCode(str: string): string {
@@ -176,6 +195,7 @@ export function getIconFromPage(page: string): JSX.Element {
     case 'coquiLocal_settings': return <AdjustmentsHorizontalIcon className="h-5 w-5 flex-none text-gray-800" aria-hidden="true" />;
     case 'localXTTS_settings':  return <AdjustmentsHorizontalIcon className="h-5 w-5 flex-none text-gray-800" aria-hidden="true" />;
     case 'kokoro_settings':  return <AdjustmentsHorizontalIcon className="h-5 w-5 flex-none text-gray-800" aria-hidden="true" />;
+    case 'edgetts_settings': return <AdjustmentsHorizontalIcon className="h-5 w-5 flex-none text-gray-800" aria-hidden="true" />;
 
     case 'stt_backend':              return <PencilSquareIcon className="h-5 w-5 flex-none text-gray-800" aria-hidden="true" />;
     case 'stt_wake_word':            return <MoonIcon className="h-5 w-5 flex-none text-gray-800" aria-hidden="true" />;
@@ -234,6 +254,7 @@ function getLabelFromPage(page: string): string {
     case 'coquiLocal_settings': return 'Coqui Local';
     case 'localXTTS_settings':  return 'Alltalk';
     case 'kokoro_settings':  return 'Kokoro';
+    case 'edgetts_settings': return 'EdgeTTS';
 
     case 'vision_backend':           return 'Vision Backend';
     case 'vision_llamacpp_settings': return 'LLama.cpp';

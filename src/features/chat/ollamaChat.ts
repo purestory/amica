@@ -1,12 +1,13 @@
 import { Message } from "./messages";
 import { buildPrompt } from "@/utils/buildPrompt";
 import { config } from '@/utils/config';
+import { getApiBaseUrl } from "@/features/externalAPI/externalAPI";
 
 export async function getOllamaChatResponseStream(messages: Message[]) {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
   };
-  const res = await fetch(`${config("ollama_url")}/api/chat`, {
+  const res = await fetch(`${getApiBaseUrl()}/api/ollama-proxy`, {
     headers: headers,
     method: "POST",
     body: JSON.stringify({

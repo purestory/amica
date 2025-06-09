@@ -15,7 +15,6 @@ import {
   getLlamaCppChatResponseStream,
   getLlavaCppChatResponse,
 } from "./llamaCppChat";
-import { getWindowAiChatResponseStream } from "./windowAiChat";
 import {
   getOllamaChatResponseStream,
   getOllamaVisionChatResponse,
@@ -31,6 +30,7 @@ import { speecht5 } from "@/features/speecht5/speecht5";
 import { openaiTTS } from "@/features/openaiTTS/openaiTTS";
 import { localXTTSTTS } from "@/features/localXTTS/localXTTS";
 import { kokoro } from "../kokoro/kokoro";
+import { edgetts } from "../edgetts/edgetts";
 
 import { AmicaLife } from "@/features/amicaLife/amicaLife";
 
@@ -141,6 +141,9 @@ export class Chat {
     this.setChatProcessing = setChatProcessing;
     this.setChatSpeaking = setChatSpeaking;
 
+    // 설정 상태 로깅
+    console.log("[Chat.initialize] 채팅봇 백엔드 설정:", config("chatbot_backend"));
+    
     // these will run forever
     this.processTtsJobs();
     this.processSpeakJobs();
@@ -697,6 +700,13 @@ export class Chat {
           const voice = await kokoro(talk.message);
           return voice.audio;
         }
+        case "edgetts": {
+          const voice = await edgetts(talk.message);
+          if (rvcEnabled) {
+            return await this.handleRvc(voice.audio);
+          }
+          return voice.audio;
+        }
       }
     } catch (e: any) {
       console.error(e.toString());
@@ -725,8 +735,6 @@ export class Chat {
         return getOpenAiChatResponseStream(messages);
       case "llamacpp":
         return getLlamaCppChatResponseStream(messages);
-      case "windowai":
-        return getWindowAiChatResponseStream(messages);
       case "ollama":
         return getOllamaChatResponseStream(messages);
       case "koboldai":

@@ -21,11 +21,11 @@ export default function Document() {
         <meta name="twitter:description" content={description} />
         <meta name="twitter:image" content={imageUrl} />
 
-        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
-        <link rel="manifest" href="/site.webmanifest" />
-        <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5" />
+        <link rel="apple-touch-icon" sizes="180x180" href={buildUrl("/apple-touch-icon.png")} />
+        <link rel="icon" type="image/png" sizes="32x32" href={buildUrl("/favicon-32x32.png")} />
+        <link rel="icon" type="image/png" sizes="16x16" href={buildUrl("/favicon-16x16.png")} />
+        <link rel="manifest" href={buildUrl("/site.webmanifest")} />
+        <link rel="mask-icon" href={buildUrl("/safari-pinned-tab.svg")} color="#5bbad5" />
         <meta name="apple-mobile-web-app-title" content={title} />
         <meta name="application-name" content={title} />
         <meta name="msapplication-TileColor" content="#da532c" />
@@ -41,11 +41,11 @@ export default function Document() {
           rel="stylesheet"
         />
         <Script
-          src="/debugLogger.js"
+          src={buildUrl("/debugLogger.js")}
           strategy="beforeInteractive"
         />
         <Script
-          src="/ammo.wasm.js"
+          src={buildUrl("/ammo.wasm.js")}
           strategy="beforeInteractive"
         />
       </Head>

@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Amica 설정 디버거</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    pre {
+      background-color: #f0f0f0;
+      padding: 10px;
+      border-radius: 5px;
+      overflow-x: auto;
+    }
+    button {
+      padding: 10px;
+      margin: 5px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    input {
+      padding: 10px;
+      margin: 5px;
+      width: 300px;
+    }
+    .test-area {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #e9f7ef;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Amica 설정 디버거</h1>
+  
+  <h2>로컬 스토리지 chatbot_backend 설정</h2>
+  <pre id="chatbot-backend-value">불러오는 중...</pre>
+  
+  <h2>모든 로컬 스토리지 값</h2>
+  <pre id="all-storage-values">불러오는 중...</pre>
+  
+  <h2>설정 수정</h2>
+  <div>
+    <input type="text" id="key-input" placeholder="키 (예: chatvrm_chatbot_backend)">
+    <input type="text" id="value-input" placeholder="값">
+    <button id="set-value-btn">설정 저장</button>
+    <button id="remove-value-btn">설정 삭제</button>
+  </div>
+  
+  <div class="test-area">
+    <h2>테스트 도구</h2>
+    <p>이 섹션에서 직접 chatbot_backend 설정을 저장하고 테스트할 수 있습니다.</p>
+    
+    <div>
+      <button id="test-save-openai">chatbot_backend를 'openai'로 저장</button>
+      <button id="test-save-llamacpp">chatbot_backend를 'llamacpp'로 저장</button>
+    </div>
+    
+    <h3>동작 확인</h3>
+    <div>
+      <button id="test-reload-config">config() 함수 테스트</button>
+      <pre id="test-result">여기에 결과가 표시됩니다.</pre>
+    </div>
+    
+    <h3>로그 메시지</h3>
+    <pre id="log-messages"></pre>
+  </div>
+  
+  <div class="section">
+    <h2 class="title">Kokoro TTS 빠른 설정</h2>
+    <button id="setup-kokoro-btn" class="btn">Kokoro TTS 설정 (포트 3200)</button>
+    <div id="kokoro-status" class="status"></div>
+  </div>
+  
+  <script>
+    // 로그 메시지 추가 함수
+    function logMessage(message) {
+      const logElement = document.getElementById('log-messages');
+      const timestamp = new Date().toISOString().slice(11, 19);
+      logElement.textContent += `[${timestamp}] ${message}\n`;
+      console.log(message);
+    }
+    
+    // 페이지 로드 시 실행
+    document.addEventListener('DOMContentLoaded', function() {
+      // chatbot_backend 값 표시
+      const chatbotBackendElement = document.getElementById('chatbot-backend-value');
+      const chatbotBackendValue = localStorage.getItem('chatvrm_chatbot_backend');
+      chatbotBackendElement.textContent = chatbotBackendValue ? 
+        `chatvrm_chatbot_backend: ${chatbotBackendValue}` : 
+        '설정되지 않음';
+      
+      // 모든 로컬 스토리지 값 표시
+      updateAllStorageValues();
+      
+      // 설정 저장 버튼
+      document.getElementById('set-value-btn').addEventListener('click', function() {
+        const key = document.getElementById('key-input').value;
+        const value = document.getElementById('value-input').value;
+        
+        if (key && value) {
+          localStorage.setItem(key, value);
+          updateAllStorageValues();
+          logMessage(`설정 저장됨: ${key} = ${value}`);
+          alert(`설정 저장됨: ${key} = ${value}`);
+        } else {
+          alert('키와 값을 모두 입력하세요');
+        }
+      });
+      
+      // 설정 삭제 버튼
+      document.getElementById('remove-value-btn').addEventListener('click', function() {
+        const key = document.getElementById('key-input').value;
+        
+        if (key) {
+          localStorage.removeItem(key);
+          updateAllStorageValues();
+          logMessage(`설정 삭제됨: ${key}`);
+          alert(`설정 삭제됨: ${key}`);
+        } else {
+          alert('삭제할 키를 입력하세요');
+        }
+      });
+      
+      // 테스트 버튼 - chatbot_backend 'openai'로 저장
+      document.getElementById('test-save-openai').addEventListener('click', function() {
+        localStorage.setItem('chatvrm_chatbot_backend', 'openai');
+        updateAllStorageValues();
+        logMessage("테스트: 'chatvrm_chatbot_backend'를 'openai'로 저장함");
+      });
+      
+      // 테스트 버튼 - chatbot_backend 'llamacpp'로 저장
+      document.getElementById('test-save-llamacpp').addEventListener('click', function() {
+        localStorage.setItem('chatvrm_chatbot_backend', 'llamacpp');
+        updateAllStorageValues();
+        logMessage("테스트: 'chatvrm_chatbot_backend'를 'llamacpp'로 저장함");
+      });
+      
+      // config() 함수 테스트 버튼
+      document.getElementById('test-reload-config').addEventListener('click', function() {
+        // 실제 config() 함수를 직접 호출할 수는 없지만, 
+        // 설정 값과 localStorage가 존재하는지 확인할 수 있습니다
+        const testResult = document.getElementById('test-result');
+        const backendValue = localStorage.getItem('chatvrm_chatbot_backend');
+        
+        testResult.textContent = 
+          `localStorage.getItem('chatvrm_chatbot_backend') = ${backendValue}\n` +
+          `현재 시간: ${new Date().toISOString()}`;
+        
+        logMessage("config() 테스트: 로컬 스토리지 값 확인 완료");
+      });
+      
+      // Kokoro 설정 버튼 기능 추가
+      document.getElementById('setup-kokoro-btn').addEventListener('click', function() {
+        try {
+          // Kokoro TTS 설정 적용
+          localStorage.setItem('chatvrm_tts_backend', 'kokoro');
+          localStorage.setItem('chatvrm_kokoro_url', 'http://localhost:3200');
+          
+          // 상태 업데이트
+          const statusElement = document.getElementById('kokoro-status');
+          statusElement.textContent = `설정 완료! TTS 백엔드: kokoro, URL: http://localhost:3200`;
+          statusElement.style.color = 'green';
+          
+          // 모든 값 업데이트
+          updateAllStorageValues();
+          
+          logMessage('Kokoro TTS 설정이 완료되었습니다.');
+        } catch (error) {
+          alert('설정 중 오류 발생: ' + error.message);
+          logMessage('Kokoro TTS 설정 중 오류: ' + error.message);
+        }
+      });
+    });
+    
+    // 모든 로컬 스토리지 값 업데이트
+    function updateAllStorageValues() {
+      const allValuesElement = document.getElementById('all-storage-values');
+      let allValues = '';
+      
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        const value = localStorage.getItem(key);
+        allValues += `${key}: ${value}\n`;
+      }
+      
+      allValuesElement.textContent = allValues || '저장된 값 없음';
+      
+      // chatbot_backend 값도 업데이트
+      const chatbotBackendElement = document.getElementById('chatbot-backend-value');
+      const chatbotBackendValue = localStorage.getItem('chatvrm_chatbot_backend');
+      chatbotBackendElement.textContent = chatbotBackendValue ? 
+        `chatvrm_chatbot_backend: ${chatbotBackendValue}` : 
+        '설정되지 않음';
+    }
+  </script>
+</body>
+</html> 

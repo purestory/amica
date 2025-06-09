@@ -36,7 +36,7 @@ import { BackgroundVideoPage } from './settings/BackgroundVideoPage';
 import { CharacterModelPage } from './settings/CharacterModelPage';
 import { CharacterAnimationPage } from './settings/CharacterAnimationPage';
 
-import { ChatbotBackendPage } from './settings/ChatbotBackendPage';
+import ChatbotBackendPage from './settings/ChatbotBackendPage';
 import { ArbiusLLMSettingsPage } from './settings/ArbiusLLMSettingsPage';
 import { ChatGPTSettingsPage } from './settings/ChatGPTSettingsPage';
 import { LlamaCppSettingsPage } from './settings/LlamaCppSettingsPage';
@@ -44,19 +44,19 @@ import { OllamaSettingsPage } from './settings/OllamaSettingsPage';
 import { KoboldAiSettingsPage } from './settings/KoboldAiSettingsPage';
 import { MoshiSettingsPage } from './settings/MoshiSettingsPage';
 
-import { TTSBackendPage } from './settings/TTSBackendPage';
+import TTSBackendPage from './settings/TTSBackendPage';
 import { ElevenLabsSettingsPage } from './settings/ElevenLabsSettingsPage';
 import { SpeechT5SettingsPage } from './settings/SpeechT5SettingsPage';
+import { CoquiLocalSettingsPage } from './settings/CoquiLocalSettingsPage';
 import { OpenAITTSSettingsPage } from './settings/OpenAITTSSettingsPage';
 import { PiperSettingsPage } from './settings/PiperSettingsPage';
-import { CoquiLocalSettingsPage } from './settings/CoquiLocalSettingsPage';
-import { LocalXTTSSettingsPage } from "./settings/LocalXTTSSettingsPage";
-
+import { LocalXTTSSettingsPage } from './settings/LocalXTTSSettingsPage';
+import { KokoroSettingsPage } from './settings/KokoroSettingsPage';
+import { EdgeTTSSettingsPage } from './settings/EdgeTTSSettingsPage';
 import { RVCSettingsPage } from './settings/RVCSettingsPage';
 
-import { STTBackendPage } from './settings/STTBackendPage';
+import STTBackendPage from './settings/STTBackendPage';
 import { STTWakeWordSettingsPage } from './settings/STTWakeWordSettingsPage';
-
 import { WhisperOpenAISettingsPage } from './settings/WhisperOpenAISettingsPage';
 import { WhisperCppSettingsPage } from './settings/WhisperCppSettingsPage';
 
@@ -72,7 +72,6 @@ import { AmicaLifePage } from "./settings/AmicaLifePage";
 import { useVrmStoreContext } from "@/features/vrmStore/vrmStoreContext";
 import { OpenRouterSettings } from "./settings/OpenRouterSettingsPage";
 import { ExternalAPIPage } from "./settings/ExternalAPIPage";
-import { KokoroSettingsPage } from "./settings/KokoroSettingsPage";
 
 
 export const Settings = ({
@@ -138,6 +137,13 @@ export const Settings = ({
 
   const [kokoroUrl, setKokoroUrl] = useState(config("kokoro_url"));
   const [kokoroVoice, setKokoroVoice] = useState(config("kokoro_voice"));
+
+  const [edgettsUrl, setEdgettsUrl] = useState(config("edgetts_url"));
+  const [edgettsVoice, setEdgettsVoice] = useState(config("edgetts_voice"));
+  const [edgettsRate, setEdgettsRate] = useState(config("edgetts_rate"));
+  const [edgettsPitch, setEdgettsPitch] = useState(config("edgetts_pitch"));
+  const [edgettsVolume, setEdgettsVolume] = useState(config("edgetts_volume"));
+  const [edgettsAutoDetect, setEdgettsAutoDetect] = useState(config("edgetts_auto_detect"));
 
   const [visionBackend, setVisionBackend] = useState(config("vision_backend"));
   const [visionLlamaCppUrl, setVisionLlamaCppUrl] = useState(config("vision_llamacpp_url"));
@@ -291,6 +297,7 @@ export const Settings = ({
     coquiLocalUrl,coquiLocalVoiceId,
     localXTTSUrl,
     kokoroUrl, kokoroVoice,
+    edgettsUrl, edgettsVoice, edgettsRate, edgettsPitch, edgettsVolume, edgettsAutoDetect,
     visionBackend,
     visionLlamaCppUrl,
     visionOllamaUrl, visionOllamaModel,
@@ -352,6 +359,32 @@ export const Settings = ({
                window.location.hostname.startsWith("192.168."));
   }, []);
 
+  // 설정이 열릴 때 chatbot_backend 설정을 다시 확인
+  useEffect(() => {
+    // 로컬 스토리지 및 서버 설정에서 최신 값을 확인
+    const currentBackend = config("chatbot_backend");
+    console.log("[Settings] 설정창 열림, 현재 챗봇 백엔드:", currentBackend);
+    
+    // 로컬호스트 여부 확인 (로컬 호스트에서는 로컬 스토리지에 저장하지 않음)
+    const isLocalAccess = isLocalhost();
+    console.log("[Settings] 로컬 접속 여부:", isLocalAccess);
+    
+    // 디버깅 목적으로만 localStorage 값을 확인 (저장하지 않음)
+    if (typeof localStorage !== "undefined") {
+      const localStorageKey = "chatvrm_chatbot_backend";
+      const localValue = localStorage.getItem(localStorageKey);
+      console.log(`[Settings] localStorage 확인만 수행: ${localStorageKey}=${localValue}`);
+      
+      // 로컬 스토리지에 저장하는 코드 제거
+    }
+    
+    // 상태 업데이트 (현재 값과 다른 경우)
+    if (chatbotBackend !== currentBackend) {
+      console.log(`[Settings] 챗봇 백엔드 값이 다름. 상태 업데이트: ${chatbotBackend} -> ${currentBackend}`);
+      setChatbotBackend(currentBackend);
+    }
+  }, []);
+
   function handleMenuClick(link: Link) {
     setPage(link.key)
     setBreadcrumbs([...breadcrumbs, link]);
@@ -363,19 +396,21 @@ export const Settings = ({
       return <MenuPage
         keys={isLocal ? 
           ["appearance", "character", "chatbot", "tts", "stt", "vision", "developer", "external_api", "reset_settings", "community"] : 
-          ["appearance"]}
+          ["character", "chatbot", "tts", "stt"]}
         menuClick={handleMenuClick} />;
 
     case 'character':
       return <MenuPage
-        keys={["character_model", "character_animation", "amica_life", "name", "system_prompt"]}
+        keys={isLocal ? 
+          ["character_model", "character_animation", "amica_life", "name", "system_prompt"] :
+          ["character_model", "name", "system_prompt"]}
         menuClick={handleMenuClick} />;
 
     case 'appearance':
       return <>
         {!isLocal && (
           <div className="rounded-lg shadow-lg bg-white p-4 mb-4">
-            <p className="text-amber-600 font-medium">⚠️ 외부 접속 시 외관 설정만 변경할 수 있습니다. 다른 설정을 변경하려면 로컬호스트에서 접속하세요.</p>
+            <p className="text-amber-600 font-medium">⚠️ 외부 접속 시 제한된 설정만 변경할 수 있습니다. 다른 설정을 변경하려면 로컬호스트에서 접속하세요.</p>
           </div>
         )}
         <MenuPage
@@ -385,7 +420,9 @@ export const Settings = ({
 
     case 'chatbot':
       return <MenuPage
-        keys={["chatbot_backend", "arbius_llm_settings", "chatgpt_settings", "llamacpp_settings", "ollama_settings", "koboldai_settings", "moshi_settings", "openrouter_settings"]}
+        keys={isLocal ? 
+          ["chatbot_backend", "chatgpt_settings", "ollama_settings", "openrouter_settings"] :
+          ["chatbot_backend"]}
         menuClick={handleMenuClick} />;
 
     case 'language':
@@ -395,12 +432,16 @@ export const Settings = ({
 
     case 'tts':
       return <MenuPage
-        keys={["tts_backend", "elevenlabs_settings", "speecht5_settings", "coquiLocal_settings", "openai_tts_settings", "piper_settings", "localXTTS_settings", "kokoro_settings", "rvc_settings"]}
+        keys={isLocal ? 
+          ["tts_backend", "edgetts_settings", "elevenlabs_settings", "openai_tts_settings", "piper_settings", "kokoro_settings", "rvc_settings"] :
+          ["tts_backend"]}
         menuClick={handleMenuClick} />;
 
     case 'stt':
       return <MenuPage
-        keys={["stt_backend", "stt_wake_word", "whisper_openai_settings", "whispercpp_settings"]}
+        keys={isLocal ? 
+          ["stt_backend", "stt_wake_word", "whisper_openai_settings", "whispercpp_settings"] :
+          ["stt_backend"]}
         menuClick={handleMenuClick} />;
 
     case 'vision':
@@ -483,13 +524,6 @@ export const Settings = ({
         setBreadcrumbs={setBreadcrumbs}
         />
 
-    case 'arbius_llm_settings':
-      return <ArbiusLLMSettingsPage
-        arbiusLLMModelId={arbiusLLMModelId}
-        setArbiusLLMModelId={setArbiusLLMModelId}
-        setSettingsUpdated={setSettingsUpdated}
-        />
-
     case 'chatgpt_settings':
       return <ChatGPTSettingsPage
         openAIApiKey={openAIApiKey}
@@ -501,39 +535,12 @@ export const Settings = ({
         setSettingsUpdated={setSettingsUpdated}
         />
 
-    case 'llamacpp_settings':
-      return <LlamaCppSettingsPage
-        llamaCppUrl={llamaCppUrl}
-        setLlamaCppUrl={setLlamaCppUrl}
-        llamaCppStopSequence={llamaCppStopSequence}
-        setLlamaCppStopSequence={setLlamaCppStopSequence}
-        setSettingsUpdated={setSettingsUpdated}
-        />
-
     case 'ollama_settings':
       return <OllamaSettingsPage
         ollamaUrl={ollamaUrl}
         setOllamaUrl={setOllamaUrl}
         ollamaModel={ollamaModel}
         setOllamaModel={setOllamaModel}
-        setSettingsUpdated={setSettingsUpdated}
-        />
-
-    case 'koboldai_settings':
-      return <KoboldAiSettingsPage
-        koboldAiUrl={koboldAiUrl}
-        setKoboldAiUrl={setKoboldAiUrl}
-        koboldAiUseExtra={koboldAiUseExtra}
-        setKoboldAiUseExtra={setKoboldAiUseExtra}
-        koboldAiStopSequence={koboldAiStopSequence}
-        setKoboldAiStopSequence={setKoboldAiStopSequence}
-        setSettingsUpdated={setSettingsUpdated}
-        />
-
-    case 'moshi_settings':
-      return <MoshiSettingsPage
-        moshiUrl={moshiUrl}
-        setMoshiUrl={setMoshiUrl}
         setSettingsUpdated={setSettingsUpdated}
         />
 
@@ -567,13 +574,6 @@ export const Settings = ({
         setSettingsUpdated={setSettingsUpdated}
         />
 
-    case 'speecht5_settings':
-      return <SpeechT5SettingsPage
-        speechT5SpeakerEmbeddingsUrl={speechT5SpeakerEmbeddingsUrl}
-        setSpeechT5SpeakerEmbeddingsUrl={setSpeechT5SpeakerEmbeddingsUrl}
-        setSettingsUpdated={setSettingsUpdated}
-        />
-
     case 'openai_tts_settings':
       return <OpenAITTSSettingsPage
         openAITTSApiKey={openAITTSApiKey}
@@ -594,28 +594,29 @@ export const Settings = ({
         setSettingsUpdated={setSettingsUpdated}
         />
     
-    case 'coquiLocal_settings':
-      return <CoquiLocalSettingsPage
-        coquiLocalUrl={coquiLocalUrl}
-        coquiLocalVoiceId={coquiLocalVoiceId}
-        setCoquiLocalVoiceId={setCoquiLocalVoiceId}
-        setCoquiLocalUrl={setCoquiLocalUrl}
-        setSettingsUpdated={setSettingsUpdated}
-        />
-
-    case 'localXTTS_settings':
-      return <LocalXTTSSettingsPage
-        localXTTSUrl={localXTTSUrl}
-        setLocalXTTSUrl={setLocalXTTSUrl}
-        setSettingsUpdated={setSettingsUpdated}
-        />
-
     case 'kokoro_settings':
       return <KokoroSettingsPage
         kokoroUrl={kokoroUrl}
         kokoroVoice={kokoroVoice}
         setKokoroVoice={setKokoroVoice}
         setKokoroUrl={setKokoroUrl}
+        setSettingsUpdated={setSettingsUpdated}
+        />
+
+    case 'edgetts_settings':
+      return <EdgeTTSSettingsPage
+        edgettsUrl={edgettsUrl}
+        edgettsVoice={edgettsVoice}
+        edgettsRate={edgettsRate}
+        edgettsPitch={edgettsPitch}
+        edgettsVolume={edgettsVolume}
+        edgettsAutoDetect={edgettsAutoDetect}
+        setEdgettsUrl={setEdgettsUrl}
+        setEdgettsVoice={setEdgettsVoice}
+        setEdgettsRate={setEdgettsRate}
+        setEdgettsPitch={setEdgettsPitch}
+        setEdgettsVolume={setEdgettsVolume}
+        setEdgettsAutoDetect={setEdgettsAutoDetect}
         setSettingsUpdated={setSettingsUpdated}
         />
 

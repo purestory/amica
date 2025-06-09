@@ -67,14 +67,32 @@ async function getResponseStream(
             combined += chunk;
 
             try {
-              const json = JSON.parse(combined);
-              const messagePiece = json.choices[0].delta.content;
-              combined = "";
-              if (!!messagePiece) {
-                controller.enqueue(messagePiece);
+              // JSON 파싱 전에 유효한 JSON 문자열인지 확인
+              // 중괄호가 열리고 닫히는지 확인
+              if (combined.trim() && 
+                  combined.includes('{') && 
+                  combined.includes('}')) {
+                try {
+                  const json = JSON.parse(combined);
+                  if (json.choices && json.choices[0] && json.choices[0].delta) {
+                    const messagePiece = json.choices[0].delta.content;
+                    combined = "";
+                    if (!!messagePiece) {
+                      controller.enqueue(messagePiece);
+                    }
+                  } else {
+                    // 유효한 JSON이지만 예상 형식이 아닌 경우
+                    console.log("유효하지 않은 응답 형식:", json);
+                    combined = ""; // 초기화하여 다음 청크부터 시작
+                  }
+                } catch (parseError) {
+                  // JSON 파싱 실패 - 여전히 불완전한 청크일 수 있음
+                  // combined는 유지하고 다음 청크를 기다림
+                  console.log("JSON 파싱 실패, 다음 청크를 기다립니다:", parseError);
+                }
               }
             } catch (error) {
-              console.error(error);
+              console.error("스트림 처리 중 오류 발생:", error);
             }
           }
         }

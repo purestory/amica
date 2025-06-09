@@ -41,3 +41,21 @@ working/*
 
 # Sentry Config File
 .env.sentry-build-plugin
+
+# Environment variables (API keys, secrets)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.development
+.env.production
+*.env
+
+# User data and configuration (contains API keys)
+userdata/
+userdata/*.json
+userdata/config.json
+userdata/initial_config.json
+config/
+!userdata/.gitkeep

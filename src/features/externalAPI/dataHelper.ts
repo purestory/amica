@@ -5,7 +5,7 @@ import { config } from "@/utils/config";
 
 // Define file paths
 export const configFilePath = path.resolve(
-  "src/features/externalAPI/dataHandlerStorage/config.json",
+  "userdata/config.json",
 );
 export const subconsciousFilePath = path.resolve(
   "src/features/externalAPI/dataHandlerStorage/subconscious.json",

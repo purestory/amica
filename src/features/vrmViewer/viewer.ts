@@ -28,6 +28,7 @@ import { HTMLMesh } from "three/examples/jsm/interactive/HTMLMesh.js";
 import { loadVRMAnimation } from "@/lib/VRMAnimation/loadVRMAnimation";
 import { loadMixamoAnimation } from "@/lib/VRMAnimation/loadMixamoAnimation";
 import { config } from "@/utils/config";
+import { buildUrl } from "@/utils/buildUrl";
 
 import { XRControllerModelFactory } from "./XRControllerModelFactory";
 import { XRHandModelFactory } from "./XRHandModelFactory";
@@ -732,10 +733,11 @@ export class Viewer {
     if (config("animation_procedural") !== "true") {
       // Temp Disable : WebXR
       // setLoadingProgress("Loading animation");
+      const animationUrlWithPath = buildUrl(config("animation_url"));
       const animation =
         config("animation_url").indexOf("vrma") > 0
-          ? await loadVRMAnimation(config("animation_url"))
-          : await loadMixamoAnimation(config("animation_url"), this.model?.vrm);
+          ? await loadVRMAnimation(animationUrlWithPath)
+          : await loadMixamoAnimation(animationUrlWithPath, this.model?.vrm);
       if (animation) {
         await this.model.loadAnimation(animation);
         this.model.update(0);
@@ -1407,4 +1409,30 @@ export class Viewer {
     this.screenshotCallback = callback;
     this.sendScreenshotToCallback = true;
   };
+
+  /**
+   * Load animation
+   */
+  public async loadAnimation(animation: any): Promise<void> {
+    if (this.model == null) {
+      throw new Error("You have to load VRM first");
+    }
+
+    // 애니메이션이 문자열(경로)인 경우만 경로 변환
+    if (typeof animation === 'string') {
+      // 절대 경로로 변환
+      const fullPath = buildUrl(animation);
+      
+      // 이 부분에서 VRMAnimation을 로드해야 함
+      const { loadVRMAnimation } = await import('@/lib/VRMAnimation/loadVRMAnimation');
+      const vrmAnimation = await loadVRMAnimation(fullPath);
+      if (vrmAnimation) {
+        await this.model.loadAnimation(vrmAnimation);
+      } else {
+        throw new Error("Failed to load VRM animation");
+      }
+    } else {
+      await this.model.loadAnimation(animation);
+    }
+  }
 }

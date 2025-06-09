@@ -1,24 +1,13 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import fs from 'fs';
 import path from 'path';
+import { isInternalRequest } from '@/utils/internalIpCheck';
 
 const USERDATA_PATH = path.join(process.cwd(), 'userdata');
 
-// 클라이언트가 localhost인지 확인하는 함수
+// 클라이언트가 내부 접속인지 확인하는 함수 (기존 isLocalRequest 함수 대체)
 function isLocalRequest(req: NextApiRequest): boolean {
-  const host = req.headers.host || '';
-  const forwardedHost = req.headers['x-forwarded-host'] as string || '';
-  const clientHost = forwardedHost || host;
-  
-  return clientHost.includes('localhost') || 
-         clientHost.includes('127.0.0.1') || 
-         clientHost.startsWith('localhost:') ||
-         clientHost.startsWith('127.0.0.1:') ||
-         // 내부 IP 허용 (옵션)
-         clientHost.includes('192.168.') ||
-         clientHost.includes('10.') ||
-         // 특정 도메인 허용 (필요에 따라 추가)
-         clientHost.includes('itsmyzone.iptime.org');
+  return isInternalRequest(req);
 }
 
 // CORS 헤더 설정 함수

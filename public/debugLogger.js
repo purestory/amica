@@ -9,6 +9,28 @@ if (typeof window !== "undefined") {
         }
 
         function logf() {
+          // ONNX 런타임 경고 메시지 필터링
+          const message = arguments[0];
+          if (typeof message === 'string') {
+            // 'onnxruntime' 문자열을 포함하는 경고 필터링
+            if (message.includes('onnxruntime') || 
+                // 'CleanUnusedInitializersAndNodeArgs' 메시지 필터링 
+                message.includes('CleanUnusedInitializersAndNodeArgs') ||
+                // VRM 관련 경고 메시지 필터링
+                message.includes('removeUnnecessaryJoints is deprecated')) {
+              // 경고 메시지 무시
+              return;
+            }
+          }
+          
+          // VAD 관련 에러 필터링 - getUserMedia 미지원 관련 에러
+          if (name === 'error' && message === 'vad error' && 
+              arguments[1] && arguments[1].message && 
+              arguments[1].message.includes('getUserMedia is not implemented')) {
+            // VAD getUserMedia 에러 무시
+            return;
+          }
+
           const logEntry = {
             type: name,
             ts: +new Date(),

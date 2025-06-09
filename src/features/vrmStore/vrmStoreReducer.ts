@@ -1,4 +1,4 @@
-import { hashCode } from "@/components/settings/common";
+import { hashCode, getBasePath } from "@/components/settings/common";
 import { VrmData } from "./vrmData";
 import { vrmDataProvider } from "./vrmDataProvider";
 import VrmDbModel from "./vrmDbModel";
@@ -55,7 +55,9 @@ const addItem = (vrmList: VrmData[], file: File, callback: (prop: AddItemCallbac
     BlobToBase64(blob).then((data: string) => {
         const hash = hashCode(data);
         if (loadedVrmList.findIndex((vrm: VrmData) => vrm.hashEquals(hash)) == -1) {
-            loadedVrmList = [...loadedVrmList, new VrmData(hash, url, '/vrm/thumb-placeholder.jpg', 'local')];
+            const basePath = getBasePath();
+            const placeholderPath = basePath + '/vrm/thumb-placeholder.jpg';
+            loadedVrmList = [...loadedVrmList, new VrmData(hash, url, placeholderPath, 'local')];
             vrmDataProvider.addItem(hash, 'local', data);
             callback({ url, vrmList: loadedVrmList, hash });
         }
@@ -118,7 +120,8 @@ const VrmDbModelToVrmData = async (vrmDbModel: VrmDbModel): Promise<VrmData> => 
     }
 
     if (!vrmDbModel.thumbData || !vrmDbModel.thumbData.length) {
-        thumbUrl = '/vrm/thumb-placeholder.jpg';
+        const basePath = getBasePath();
+        thumbUrl = basePath + '/vrm/thumb-placeholder.jpg';
     } else {
         const thumbBlob = await Base64ToBlob(vrmDbModel.thumbData);
         thumbUrl = window.URL.createObjectURL(thumbBlob);

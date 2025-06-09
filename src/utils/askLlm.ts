@@ -4,7 +4,6 @@ import { Chat } from "@/features/chat/chat";
 import { getEchoChatResponseStream } from "@/features/chat/echoChat";
 import { getOpenAiChatResponseStream } from "@/features/chat/openAiChat";
 import { getLlamaCppChatResponseStream, getLlavaCppChatResponse } from "@/features/chat/llamaCppChat";
-import { getWindowAiChatResponseStream } from "@/features/chat/windowAiChat";
 import { getOllamaChatResponseStream, getOllamaVisionChatResponse } from "@/features/chat/ollamaChat";
 import { getKoboldAiChatResponseStream } from "@/features/chat/koboldAiChat";
 
@@ -38,19 +37,22 @@ export async function askLLM(
   const getChatResponseStream = async (messages: Message[]) => {
     console.debug("getChatResponseStream", messages);
     const chatbotBackend = config("chatbot_backend");
+    console.log("[DEBUG] chatbot_backend 값:", chatbotBackend, "타입:", typeof chatbotBackend);
 
     switch (chatbotBackend) {
       case "chatgpt":
         return getOpenAiChatResponseStream(messages);
+      case "openai":
+        console.log("[DEBUG] openai 선택됨");
+        return getOpenAiChatResponseStream(messages);
       case "llamacpp":
         return getLlamaCppChatResponseStream(messages);
-      case "windowai":
-        return getWindowAiChatResponseStream(messages);
       case "ollama":
         return getOllamaChatResponseStream(messages);
       case "koboldai":
         return getKoboldAiChatResponseStream(messages);
       default:
+        console.log("[DEBUG] 기본값 echo 사용됨");
         return getEchoChatResponseStream(messages);
     }
   };

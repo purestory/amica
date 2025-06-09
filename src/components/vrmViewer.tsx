@@ -1,11 +1,9 @@
 import * as THREE from "three";
-import { useContext, useCallback, useState } from "react";
+import { useContext, useCallback, useState, useEffect } from "react";
 import { ViewerContext } from "@/features/vrmViewer/viewerContext";
 import { buildUrl } from "@/utils/buildUrl";
 import { config } from "@/utils/config";
 import { useVrmStoreContext } from "@/features/vrmStore/vrmStoreContext";
-import isTauri from "@/utils/isTauri";
-import { invoke } from "@tauri-apps/api/tauri";
 import { ChatContext } from "@/features/chat/chatContext";
 import clsx from "clsx";
 
@@ -20,9 +18,19 @@ export default function VrmViewer({ chatMode }: { chatMode: boolean }) {
   const isVrmLocal = "local" == config("vrm_save_type");
 
   viewer.resizeChatMode(chatMode);
-  window.addEventListener("resize", () => {
-    viewer.resizeChatMode(chatMode);
-  });
+  
+  // 브라우저에서만 실행되도록 useEffect 사용
+  useEffect(() => {
+    const handleResize = () => {
+      viewer.resizeChatMode(chatMode);
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [chatMode, viewer]);
 
   const canvasRef = useCallback(
     (canvas: HTMLCanvasElement) => {
@@ -52,14 +60,12 @@ export default function VrmViewer({ chatMode }: { chatMode: boolean }) {
               console.log("vrm loaded");
               setLoadingError(false);
               setIsLoading(false);
-              if (isTauri()) invoke("close_splashscreen");
             }
           })
           .catch((e) => {
             console.error("vrm loading error", e);
             setLoadingError(true);
             setIsLoading(false);
-            if (isTauri()) invoke("close_splashscreen");
           });
 
         // Replace VRM with Drag and Drop

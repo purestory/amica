@@ -1,15 +1,32 @@
 import { XMarkIcon } from '@heroicons/react/20/solid';
-import { useState, useCallback } from "react";
-import { updateConfig } from "@/utils/config";
+import { useState, useEffect } from "react";
+import { updateConfig, isLocalhost } from "@/utils/config";
 import { useTranslation, Trans } from '@/utils/i18n-stubs';
 
 export const Introduction = ({ open }: {
   open: boolean;
 }) => {
-  const [opened, setOpened] = useState(open);
+  const [opened, setOpened] = useState(false);
   const { t } = useTranslation();
 
-  if (! opened) {
+  useEffect(() => {
+    // 로컬호스트 여부 확인
+    const isLocal = isLocalhost();
+    console.log('[Introduction] 로컬 접속 여부:', isLocal);
+    
+    // 로컬호스트가 아닌 경우에만 localStorage에 저장
+    if (typeof localStorage !== "undefined" && !isLocal) {
+      console.log('[Introduction] 외부 접속이므로 localStorage에 show_introduction 값 저장');
+      localStorage.setItem('chatvrm_show_introduction', 'false');
+    } else if (typeof localStorage !== "undefined" && isLocal) {
+      console.log('[Introduction] 로컬 접속이므로 localStorage에서 show_introduction 값 삭제');
+      localStorage.removeItem('chatvrm_show_introduction');
+    }
+    
+    setOpened(false);
+  }, []);
+
+  if (!opened) {
     return null;
   }
 
@@ -54,6 +71,12 @@ export const Introduction = ({ open }: {
           <button
             onClick={() => {
               updateConfig("show_introduction", "false");
+              // 로컬호스트 여부 확인
+              const isLocal = isLocalhost();
+              if (!isLocal && typeof localStorage !== "undefined") {
+                console.log('[Introduction] 외부 접속이므로 localStorage에 show_introduction 값 저장');
+                localStorage.setItem('chatvrm_show_introduction', 'false');
+              }
               setOpened(false);
             }}
             className="inline-flex items-center rounded-md bg-secondary px-2.5 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-secondary-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary"
