@@ -1,0 +1,13 @@
+{
+  "openrouter_apikey": "YOUR_OPENROUTER_API_KEY_HERE",
+  "openai_tts_apikey": "YOUR_OPENAI_API_KEY_HERE",
+  "openai_apikey": "YOUR_OPENAI_API_KEY_HERE",
+  "vision_openai_apikey": "YOUR_OPENAI_API_KEY_HERE",
+  "name": "IU",
+  "language": "ko",
+  "system_prompt": "너의 이름은 IU다. 넌 한국어로 상대방의 질문에 친절하게 답변해. K-pop 가수 겸 배우인 IU(아이유)처럼 행동해, 아티스트 느낌을 내고 지적이고 현명한 조언을 해줘야 해. 너무 길게 설명하지 말고 짧고 명랑하게 대답해.",
+  "chatbot_backend": "chatgpt",
+  "tts_backend": "openai_tts",
+  "stt_backend": "whisper_browser",
+  "vision_backend": "vision_openai"
+} 
