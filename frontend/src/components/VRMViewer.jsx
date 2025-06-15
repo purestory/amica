@@ -3,6 +3,7 @@ import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { VRMLoaderPlugin, VRMUtils } from '@pixiv/three-vrm'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
+import { loadVRMAnimation } from '../lib/loadVRMAnimation'
 
 const VRMViewer = () => {
   const canvasRef = useRef(null)
@@ -11,6 +12,10 @@ const VRMViewer = () => {
 
   useEffect(() => {
     if (!canvasRef.current) return
+
+    let vrm = null
+    let mixer = null
+    let currentAction = null
 
     // 기본 Three.js 설정
     const scene = new THREE.Scene()
@@ -40,6 +45,22 @@ const VRMViewer = () => {
     controls.target.set(0, 1.3, 0)
     camera.position.set(0, 1.3, 1.5)
     controls.update()
+
+    // 원본 코드의 loadAnimation 메서드 구현
+    const loadAnimation = async (animation) => {
+      if (!vrm || !mixer) {
+        throw new Error("You have to load VRM first")
+      }
+
+      const clip = animation instanceof THREE.AnimationClip
+        ? animation
+        : animation.createAnimationClip(vrm)
+      
+      mixer.stopAllAction()
+      currentAction = mixer.clipAction(clip)
+      currentAction.loop = THREE.LoopRepeat
+      currentAction.play()
+    }
     
     // VRM 로드
     const loadVRM = async () => {
@@ -48,7 +69,7 @@ const VRMViewer = () => {
         loader.register((parser) => new VRMLoaderPlugin(parser))
         
         const gltf = await loader.loadAsync('/amica/vrm/AvatarSample_B.vrm')
-        const vrm = gltf.userData.vrm
+        vrm = gltf.userData.vrm
         
         if (!vrm) throw new Error('VRM 데이터를 찾을 수 없습니다')
         
@@ -79,6 +100,20 @@ const VRMViewer = () => {
             obj.frustumCulled = false
           }
         })
+
+        // AnimationMixer 생성
+        mixer = new THREE.AnimationMixer(vrm.scene)
+        
+        // idle 애니메이션 로드
+        try {
+          const idleAnimation = await loadVRMAnimation('/amica/animations/idle_loop.vrma')
+          if (idleAnimation) {
+            await loadAnimation(idleAnimation)
+            console.log('Idle 애니메이션 로드 완료')
+          }
+        } catch (animError) {
+          console.warn('Idle 애니메이션 로드 실패:', animError)
+        }
         
         setLoading(false)
         
@@ -87,6 +122,11 @@ const VRMViewer = () => {
           requestAnimationFrame(animate)
           
           const deltaTime = 0.016
+          
+          if (mixer) {
+            mixer.update(deltaTime)
+          }
+          
           vrm.update(deltaTime)
           
           controls.update()
@@ -114,6 +154,9 @@ const VRMViewer = () => {
     
     return () => {
       window.removeEventListener('resize', handleResize)
+      if (mixer) {
+        mixer.stopAllAction()
+      }
       renderer.dispose()
     }
   }, [])
