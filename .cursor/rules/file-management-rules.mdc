@@ -1,5 +1,228 @@
 ---
-description:
-globs:
+description: 
+globs: 
 alwaysApply: false
 ---
+# 파일 관리 및 프로젝트 구조 규칙
+
+## 🚨 **절대 하지 말 것**
+
+### 1. **잘못된 디렉토리에 파일 생성 금지**
+- **문제**: `frontend/` 폴더에 만들어야 할 파일을 상위 폴더(`/amica/`)에 생성
+- **금지 사례**:
+  ```bash
+  # 잘못된 예시 - 절대 하지 마세요!
+  edit_file("package.json")           # → /amica/package.json (잘못됨)
+  edit_file("src/App.jsx")           # → /amica/src/App.jsx (잘못됨)
+  ```
+- **올바른 방법**:
+  ```bash
+  edit_file("frontend/package.json")   # → /amica/frontend/package.json (올바름)
+  edit_file("frontend/src/App.jsx")   # → /amica/frontend/src/App.jsx (올바름)
+  ```
+
+### 2. **상대 경로 오해 금지**
+- **현재 터미널 위치**: `/home/purestory/amica`
+- **frontend 작업 시**: 모든 파일 경로에 `frontend/` 접두사 필수
+- **backend 작업 시**: 모든 파일 경로에 `backend/` 접두사 필수
+
+## ✅ **반드시 할 것**
+
+### 1. **파일 생성 전 경로 확인**
+```bash
+# 1단계: 현재 위치 확인
+pwd  # 결과: /home/purestory/amica 이어야 함
+
+# 2단계: 프로젝트 구조 확인
+ls -la  # frontend/, backend/, backup/ 폴더가 있어야 함
+
+# 3단계: 타겟 폴더 내용 확인
+ls -la frontend/  # frontend 작업 시
+ls -la backend/   # backend 작업 시
+```
+
+### 2. **파일 경로 패턴**
+
+#### **Frontend 파일들**
+```bash
+✅ frontend/package.json
+✅ frontend/vite.config.js  
+✅ frontend/public/index.html
+✅ frontend/src/main.jsx
+✅ frontend/src/App.jsx
+✅ frontend/src/components/VRMViewer.jsx
+✅ frontend/src/styles/App.css
+```
+
+#### **Backend 파일들**
+```bash
+✅ backend/package.json
+✅ backend/src/app.js
+✅ backend/src/routes/config.js
+✅ backend/userdata/config.json
+```
+
+#### **프로젝트 루트 파일들**
+```bash
+✅ PROJECT_PLAN.md
+✅ README.md
+✅ .gitignore
+```
+
+### 3. **작업 순서**
+
+#### **Frontend 작업 시**
+1. `cd frontend` 또는 터미널 위치 확인
+2. 파일 생성: `edit_file("frontend/파일경로")`
+3. 패키지 설치: `cd frontend && npm install`
+4. 개발 서버: `cd frontend && npm run dev`
+
+#### **Backend 작업 시**
+1. `cd backend` 또는 터미널 위치 확인  
+2. 파일 생성: `edit_file("backend/파일경로")`
+3. 패키지 설치: `cd backend && npm install`
+4. 서버 실행: `cd backend && npm start`
+
+## 🔧 **실수 복구 방법**
+
+### 잘못된 위치에 파일 생성된 경우
+```bash
+# 1. 잘못 생성된 파일들 확인
+ls -la /home/purestory/amica/
+
+# 2. 올바른 위치로 이동
+mv package.json frontend/
+mv src/* frontend/src/
+mv public/* frontend/public/
+
+# 3. 빈 폴더 정리
+rmdir src public
+```
+
+## 📋 **체크리스트**
+
+### 파일 생성 전 확인사항
+- [ ] 현재 터미널 위치가 `/home/purestory/amica` 인가?
+- [ ] 생성할 파일이 frontend용인가, backend용인가?
+- [ ] 파일 경로에 올바른 접두사(`frontend/` 또는 `backend/`)가 있는가?
+- [ ] 타겟 폴더가 존재하는가?
+
+### 명령 실행 전 확인사항  
+- [ ] `npm install`을 올바른 폴더에서 실행하는가?
+- [ ] `npm run dev`를 올바른 폴더에서 실행하는가?
+- [ ] 환경변수나 설정이 올바른 위치에 있는가?
+
+## 🎯 **목표 프로젝트 구조**
+
+```
+amica/                           # 프로젝트 루트
+├── .git/                        # Git 저장소
+├── .cursor/rules/               # Cursor 규칙들
+├── PROJECT_PLAN.md              # 프로젝트 계획서
+├── backup/                      # 기존 프로젝트 백업
+│   ├── src/                     # 기존 소스
+│   ├── public/                  # 기존 정적파일
+│   └── userdata/                # 기존 설정
+├── frontend/                    # React 프론트엔드
+│   ├── package.json             # ✅ Frontend 의존성
+│   ├── vite.config.js           # ✅ Vite 설정
+│   ├── public/
+│   │   └── index.html           # ✅ HTML 템플릿
+│   └── src/
+│       ├── main.jsx             # ✅ React 진입점
+│       ├── App.jsx              # ✅ 메인 컴포넌트
+│       ├── components/          # UI 컴포넌트들
+│       ├── features/            # 기능별 모듈들
+│       ├── hooks/               # React 훅들
+│       └── styles/              # CSS 스타일들
+└── backend/                     # Express 백엔드
+    ├── package.json             # ✅ Backend 의존성
+    ├── src/
+    │   ├── app.js               # ✅ Express 서버
+    │   ├── routes/              # API 라우트들
+    │   ├── controllers/         # 비즈니스 로직
+    │   └── middleware/          # 미들웨어들
+    ├── userdata/                # 사용자 데이터
+    └── config/                  # 백엔드 설정
+```
+
+## ⚡ **빠른 참조**
+
+### 자주 사용하는 올바른 경로들
+- Frontend 메인: `frontend/src/App.jsx`
+- Frontend 스타일: `frontend/src/styles/App.css`  
+- Frontend 패키지: `frontend/package.json`
+- Backend 메인: `backend/src/app.js`
+- Backend 패키지: `backend/package.json`
+- 프로젝트 문서: `PROJECT_PLAN.md`
+
+### 절대 생성하면 안되는 경로들  
+- ❌ `package.json` (루트에 생성됨)
+- ❌ `src/App.jsx` (루트에 생성됨)
+- ❌ `public/index.html` (루트에 생성됨)
+- ❌ `vite.config.js` (루트에 생성됨)
+
+## 🌐 **Nginx 및 정적 파일 서빙 규칙**
+
+### ✅ **올바른 배포 프로세스**
+```bash
+# 1. Frontend 빌드 (필수)
+cd frontend && npm run build
+
+# 2. 빌드 결과 확인
+ls -la frontend/dist/
+
+# 3. 끝! nginx는 자동으로 새 파일을 서빙함
+```
+
+### 🚨 **절대 하지 말 것 - Nginx 관련**
+
+#### 1. **불필요한 nginx reload/restart 금지**
+```bash
+# ❌ 잘못된 예시 - 절대 하지 마세요!
+sudo systemctl reload nginx    # 정적 파일 변경시 불필요
+sudo systemctl restart nginx   # 정적 파일 변경시 불필요
+```
+
+**이유**: nginx는 정적 파일(`frontend/dist/`)을 직접 서빙하므로, 파일이 변경되면 즉시 반영됩니다.
+
+#### 2. **nginx reload가 필요한 경우 vs 불필요한 경우**
+
+**✅ nginx reload가 필요한 경우:**
+- nginx 설정 파일 변경 (`/etc/nginx/sites-available/purestory`)
+- 새로운 도메인/포트 추가
+- SSL 인증서 변경
+- 프록시 설정 변경
+
+**❌ nginx reload가 불필요한 경우:**
+- `npm run build` 후 정적 파일 변경
+- HTML, CSS, JS 파일 내용 변경
+- 이미지, VRM 파일 등 정적 자산 변경
+
+### 📋 **정적 파일 배포 체크리스트**
+
+#### Frontend 변경사항 배포 시
+- [ ] `cd frontend` 디렉토리 이동 확인
+- [ ] `npm run build` 실행
+- [ ] `frontend/dist/` 폴더에 새 파일 생성 확인
+- [ ] 브라우저에서 새로고침으로 변경사항 확인
+- [ ] ❌ nginx reload 하지 않기!
+
+#### Nginx 설정 변경 시에만
+- [ ] `/etc/nginx/sites-available/purestory` 파일 수정
+- [ ] `sudo nginx -t` 설정 테스트
+- [ ] `sudo systemctl reload nginx` 설정 적용
+
+### 🔧 **현재 프로젝트 nginx 설정**
+```nginx
+# /etc/nginx/sites-available/purestory
+location /amica/ {
+    alias /home/purestory/amica/frontend/dist/;
+    try_files $uri $uri/ /amica/index.html;
+}
+```
+
+**동작 방식**: 
+- `https://ai-open.kr/amica/` 요청 시
+- nginx가 `/home/purestory/amica/frontend/dist/` 폴더의 파일을 직접 서빙
+- 파일 변경 시 즉시 반영 (reload 불필요)

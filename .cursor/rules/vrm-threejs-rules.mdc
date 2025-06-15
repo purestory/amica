@@ -1,0 +1,203 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# VRM 뷰어 및 Three.js 개발 규칙
+
+## 🎯 **VRM 뷰어 개발 핵심 원칙**
+
+### ✅ **올바른 VRM 처리 방식**
+
+#### 1. **VRM 로딩 순서**
+```javascript
+// 1. GLTFLoader 설정
+const loader = new GLTFLoader()
+loader.register((parser) => new VRMLoaderPlugin(parser))
+
+// 2. VRM 로드
+const gltf = await loader.loadAsync(url)
+const vrm = gltf.userData.vrm
+
+// 3. 씬에 추가
+scene.add(vrm.scene)
+
+// 4. VRM 최적화
+VRMUtils.removeUnnecessaryVertices(gltf.scene)
+
+// 5. 포즈 조정 (T-pose 해결)
+adjustVRMPose(vrm)
+```
+
+#### 2. **T-pose 문제 해결**
+```javascript
+const adjustVRMPose = (vrm) => {
+  if (!vrm.humanoid) return
+  
+  // 팔을 자연스럽게 아래로 내림
+  const leftUpperArm = vrm.humanoid.getNormalizedBoneNode('leftUpperArm')
+  const rightUpperArm = vrm.humanoid.getNormalizedBoneNode('rightUpperArm')
+  
+  if (leftUpperArm) leftUpperArm.rotation.z = Math.PI * 0.17   // 30도
+  if (rightUpperArm) rightUpperArm.rotation.z = -Math.PI * 0.17 // -30도
+}
+```
+
+### 🚨 **절대 하지 말 것 - VRM 관련**
+
+#### 1. **잘못된 애니메이션 로딩 금지**
+```javascript
+// ❌ 잘못된 예시 - PropertyBinding 에러 발생
+const mixer = new THREE.AnimationMixer(vrm.scene)
+const action = mixer.clipAction(gltf.animations[0])
+action.play() // → "No target node found" 에러
+```
+
+**이유**: VRM과 애니메이션의 본(bone) 구조가 맞지 않으면 PropertyBinding 에러 발생
+
+#### 2. **성능 문제 유발 코드 금지**
+```javascript
+// ❌ 매 프레임마다 무거운 작업
+function animate() {
+  // 잘못된 예시들
+  vrm.scene.traverse(() => {}) // 매 프레임마다 traverse
+  vrm.humanoid.getNormalizedBoneNode() // 매 프레임마다 본 검색
+}
+```
+
+### 📐 **Three.js 씬 설정 규칙**
+
+#### 1. **카메라 설정 (기존 프로젝트 기준)**
+```javascript
+const camera = new THREE.PerspectiveCamera(20.0, 1, 0.1, 20.0)
+camera.position.set(0, 1.3, 1.5)  // 눈높이 위치
+
+// OrbitControls 설정
+const controls = new OrbitControls(camera, renderer.domElement)
+controls.target.set(0, 1.3, 0)    // 캐릭터 머리 높이
+controls.minDistance = 0.5
+controls.maxDistance = 4
+```
+
+#### 2. **조명 설정 (기존 프로젝트 기준)**
+```javascript
+// 방향광 (주 조명)
+const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6)
+directionalLight.position.set(1.0, 1.0, 1.0).normalize()
+
+// 환경광 (전체 밝기)
+const ambientLight = new THREE.AmbientLight(0xffffff, 2.0)
+```
+
+#### 3. **배경 설정 (기존 프로젝트 기준)**
+```javascript
+// 렌더러 배경색
+renderer.setClearColor(0xf0f0f0, 1)  // 밝은 회색
+
+// CSS 배경색도 동일하게
+body { background-color: #f0f0f0; }
+```
+
+### 🔧 **VRM 파일 경로 규칙**
+
+#### **정적 자산 위치**
+```
+frontend/public/
+├── vrm/
+│   ├── AvatarSample_A.vrm
+│   ├── AvatarSample_B.vrm    # 기본 캐릭터 (IU)
+│   └── AvatarSample_D.vrm
+├── animations/
+│   ├── idle_loop.vrma        # 기본 애니메이션
+│   ├── dance.vrma
+│   └── greeting.vrma
+└── favicon.ico
+```
+
+#### **URL 경로 (nginx 서빙)**
+```javascript
+// ✅ 올바른 경로
+const vrmUrl = '/amica/vrm/AvatarSample_B.vrm'
+const animationUrl = '/amica/animations/idle_loop.vrma'
+
+// ❌ 잘못된 경로
+const vrmUrl = '/vrm/AvatarSample_B.vrm'        // /amica/ 접두사 누락
+const vrmUrl = './vrm/AvatarSample_B.vrm'       // 상대경로 사용
+```
+
+### 📋 **VRM 뷰어 개발 체크리스트**
+
+#### VRM 로딩 시
+- [ ] GLTFLoader에 VRMLoaderPlugin 등록했는가?
+- [ ] gltf.userData.vrm으로 VRM 객체 추출했는가?
+- [ ] VRMUtils.removeUnnecessaryVertices() 최적화 적용했는가?
+- [ ] T-pose 해결을 위한 포즈 조정 함수 호출했는가?
+- [ ] 씬에 vrm.scene 추가했는가?
+
+#### 애니메이션 처리 시
+- [ ] VRM과 애니메이션의 본 구조 호환성 확인했는가?
+- [ ] PropertyBinding 에러 발생하지 않는가?
+- [ ] 애니메이션이 정말 필요한가? (단순 포즈 조정으로 충분한가?)
+
+#### 성능 최적화
+- [ ] frustumCulled = false 설정했는가?
+- [ ] 매 프레임마다 무거운 작업 피했는가?
+- [ ] VRM 업데이트는 vrm.update(deltaTime)만 호출하는가?
+
+### 🎨 **UI/UX 가이드라인**
+
+#### **로딩 상태 표시**
+```javascript
+// 로딩 진행률 표시
+setLoadingProgress(`로딩 중... ${percent}%`)
+
+// 단계별 상태 표시
+setLoadingProgress('VRM 파일 로딩 중...')
+setLoadingProgress('VRM 최적화 중...')
+setLoadingProgress('포즈 조정 중...')
+setLoadingProgress('로딩 완료!')
+```
+
+#### **에러 처리**
+```javascript
+try {
+  // VRM 로딩 코드
+} catch (err) {
+  console.error('VRM 로딩 에러:', err)
+  setError(`VRM 로딩 실패: ${err.message}`)
+}
+```
+
+### 🔍 **디버깅 가이드**
+
+#### **자주 발생하는 에러들**
+
+1. **"No target node found for track" 에러**
+   - 원인: VRM과 애니메이션의 본 구조 불일치
+   - 해결: 애니메이션 제거하고 포즈 조정으로 대체
+
+2. **"VRM 데이터를 찾을 수 없습니다" 에러**
+   - 원인: gltf.userData.vrm이 null
+   - 해결: VRMLoaderPlugin 등록 확인
+
+3. **T-pose 문제**
+   - 원인: VRM 기본 포즈가 T-pose
+   - 해결: adjustVRMPose() 함수로 자연스러운 포즈 적용
+
+#### **성능 모니터링**
+```javascript
+// requestAnimationFrame 성능 체크
+const startTime = performance.now()
+// 렌더링 코드
+const endTime = performance.now()
+if (endTime - startTime > 16) {
+  console.warn(`프레임 시간 초과: ${endTime - startTime}ms`)
+}
+```
+
+### 📚 **참고 자료**
+
+- **기존 프로젝트**: [backup/src/features/vrmViewer/](mdc:backup/src/features/vrmViewer/)
+- **현재 VRM 뷰어**: [frontend/src/components/VRMViewer.jsx](mdc:frontend/src/components/VRMViewer.jsx)
+- **설정 파일**: [backup/userdata/config.json](mdc:backup/userdata/config.json)
+- **VRM 파일들**: [frontend/public/vrm/](mdc:frontend/public/vrm/)

@@ -4,6 +4,8 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { VRMLoaderPlugin, VRMUtils } from '@pixiv/three-vrm'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { loadVRMAnimation } from '../lib/loadVRMAnimation'
+import AnimationCachePanel from './AnimationCachePanel'
+import LoadingOverlay from './LoadingOverlay'
 
 const VRMViewer = () => {
   const canvasRef = useRef(null)
@@ -19,7 +21,7 @@ const VRMViewer = () => {
 
     // 기본 Three.js 설정
     const scene = new THREE.Scene()
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
+    const camera = new THREE.PerspectiveCamera(20.0, window.innerWidth / window.innerHeight, 0.1, 20.0) // FOV 20도
     const renderer = new THREE.WebGLRenderer({ 
       canvas: canvasRef.current, 
       antialias: true,
@@ -40,11 +42,27 @@ const VRMViewer = () => {
     directionalLight.position.set(1, 1, 1)
     scene.add(directionalLight)
     
-    // 카메라 컨트롤
+    // 카메라 컨트롤 - 원본 코드와 정확히 동일하게
     const controls = new OrbitControls(camera, renderer.domElement)
-    controls.target.set(0, 1.3, 0)
-    camera.position.set(0, 1.3, 1.5)
+    controls.screenSpacePanning = true
+    controls.minDistance = 0.5
+    controls.maxDistance = 4
+    
+    // 원본 코드와 동일한 초기 카메라 위치
+    camera.position.set(0, 8.5, 3.5)
     controls.update()
+
+    // 원본 코드의 resetCamera 메서드 구현
+    const resetCamera = (vrm) => {
+      const headNode = vrm.humanoid?.getNormalizedBoneNode("head")
+      
+      if (headNode) {
+        const headPos = headNode.getWorldPosition(new THREE.Vector3())
+        camera.position.set(camera.position.x, headPos.y, camera.position.z)
+        controls.target.set(headPos.x, headPos.y, headPos.z)
+        controls.update()
+      }
+    }
 
     // 원본 코드의 loadAnimation 메서드 구현
     const loadAnimation = async (animation) => {
@@ -79,37 +97,32 @@ const VRMViewer = () => {
         // VRM 최적화
         VRMUtils.removeUnnecessaryVertices(gltf.scene)
         
-        // 모델 위치 조정
-        vrm.scene.position.set(0, 0, 0)
+        // 기본 설정
         vrm.scene.rotation.y = Math.PI
         
         // 팔 내리기
         const leftUpperArm = vrm.humanoid?.getNormalizedBoneNode('leftUpperArm')
         const rightUpperArm = vrm.humanoid?.getNormalizedBoneNode('rightUpperArm')
-        
-        if (leftUpperArm) {
-          leftUpperArm.rotation.z = 1.2 // 왼팔 내리기
-        }
-        if (rightUpperArm) {
-          rightUpperArm.rotation.z = -1.2 // 오른팔 내리기
-        }
+        if (leftUpperArm) leftUpperArm.rotation.z = 1.2
+        if (rightUpperArm) rightUpperArm.rotation.z = -1.2
         
         // frustumCulled 설정
         vrm.scene.traverse((obj) => {
-          if (obj.isMesh) {
-            obj.frustumCulled = false
-          }
+          if (obj.isMesh) obj.frustumCulled = false
         })
+
+        // 카메라 조정
+        resetCamera(vrm)
 
         // AnimationMixer 생성
         mixer = new THREE.AnimationMixer(vrm.scene)
         
-        // idle 애니메이션 로드
+        // idle 애니메이션 로드 (캐싱 적용)
         try {
           const idleAnimation = await loadVRMAnimation('/amica/animations/idle_loop.vrma')
           if (idleAnimation) {
             await loadAnimation(idleAnimation)
-            console.log('Idle 애니메이션 로드 완료')
+            console.log('Idle 애니메이션 로드 완료 (캐싱 적용)')
           }
         } catch (animError) {
           console.warn('Idle 애니메이션 로드 실패:', animError)
@@ -164,32 +177,8 @@ const VRMViewer = () => {
   return (
     <div style={{ position: 'relative', width: '100%', height: '100vh' }}>
       <canvas ref={canvasRef} style={{ width: '100%', height: '100%' }} />
-      
-      {loading && (
-        <div style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          color: 'white',
-          fontSize: '18px'
-        }}>
-          VRM 로딩 중...
-        </div>
-      )}
-      
-      {error && (
-        <div style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          color: 'red',
-          fontSize: '18px'
-        }}>
-          오류: {error}
-        </div>
-      )}
+      <AnimationCachePanel />
+      <LoadingOverlay loading={loading} error={error} />
     </div>
   )
 }
