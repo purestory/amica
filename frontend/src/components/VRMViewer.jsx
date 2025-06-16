@@ -13,11 +13,11 @@ const VRMViewer = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   
-  // 위치 및 회전 상태
-  const [characterPosition, setCharacterPosition] = useState({ x: 0, y: 0, z: 0 })
-  const [characterRotation, setCharacterRotation] = useState({ x: 0, y: Math.PI, z: 0 })
-  const [cameraPosition, setCameraPosition] = useState({ x: 0, y: 1.5, z: 3 })
-  const [cameraTarget, setCameraTarget] = useState({ x: 0, y: 1.5, z: 0 })
+  // 위치 및 회전 상태 - 사용자 지정 값으로 초기화
+  const [characterPosition, setCharacterPosition] = useState({ x: 0.10, y: -0.20, z: -0.10 })
+  const [characterRotation, setCharacterRotation] = useState({ x: 0, y: 172 * Math.PI / 180, z: 0 }) // 172도를 라디안으로
+  const [cameraPosition, setCameraPosition] = useState({ x: 0.00, y: 1.40, z: 1.60 })
+  const [cameraTarget, setCameraTarget] = useState({ x: 0, y: 1.20, z: 0 })
   
   // Three.js 객체 참조
   const sceneRef = useRef(null)
@@ -97,24 +97,20 @@ const VRMViewer = () => {
         // VRM 최적화
         VRMUtils.removeUnnecessaryVertices(gltf.scene)
         
-        // 초기 위치 계산 (이후 컨트롤러로 조절 가능)
-        vrm.scene.updateMatrixWorld(true)
-        const box = new THREE.Box3().setFromObject(vrm.scene)
-        const center = box.getCenter(new THREE.Vector3())
-        const size = box.getSize(new THREE.Vector3())
-
-        // 초기 캐릭터 위치 설정
-        const initialPosition = { x: -center.x, y: -box.min.y, z: -center.z }
-        setCharacterPosition(initialPosition)
+        // 사용자 지정 위치로 설정
+        vrm.scene.position.set(characterPosition.x, characterPosition.y, characterPosition.z)
+        vrm.scene.rotation.set(characterRotation.x, characterRotation.y, characterRotation.z)
         
-        // 초기 카메라 설정
-        const targetY = size.y * 0.75
-        const dist = size.y / (2 * Math.tan(camera.fov * Math.PI / 180 / 2))
-        setCameraPosition({ x: 0, y: targetY, z: dist * 1.1 })
-        setCameraTarget({ x: 0, y: targetY, z: 0 })
+        // 카메라 초기 설정
+        camera.position.set(cameraPosition.x, cameraPosition.y, cameraPosition.z)
+        controls.target.set(cameraTarget.x, cameraTarget.y, cameraTarget.z)
+        controls.update()
         
-        console.log('캐릭터 크기 (size):', size)
-        console.log('초기 위치 설정 완료')
+        console.log('✅ 사용자 지정 위치로 캐릭터 설정 완료')
+        console.log('캐릭터 위치:', characterPosition)
+        console.log('캐릭터 회전:', { ...characterRotation, yDegrees: characterRotation.y * 180 / Math.PI })
+        console.log('카메라 위치:', cameraPosition)
+        console.log('카메라 타겟:', cameraTarget)
         
         // 팔 내리기
         const leftUpperArm = vrm.humanoid?.getNormalizedBoneNode('leftUpperArm')
@@ -234,25 +230,16 @@ const VRMViewer = () => {
     }
   }, [cameraTarget])
 
-  // 리셋 함수
+  // 리셋 함수 - 사용자 지정 값으로 리셋
   const handleReset = () => {
     if (vrmRef.current) {
-      // 초기 위치로 리셋
-      vrmRef.current.scene.updateMatrixWorld(true)
-      const box = new THREE.Box3().setFromObject(vrmRef.current.scene)
-      const center = box.getCenter(new THREE.Vector3())
-      const size = box.getSize(new THREE.Vector3())
+      // 사용자 지정 값으로 리셋
+      setCharacterPosition({ x: 0.10, y: -0.20, z: -0.10 })
+      setCharacterRotation({ x: 0, y: 172 * Math.PI / 180, z: 0 })
+      setCameraPosition({ x: 0.00, y: 1.40, z: 1.60 })
+      setCameraTarget({ x: 0, y: 1.20, z: 0 })
       
-      const initialPosition = { x: -center.x, y: -box.min.y, z: -center.z }
-      setCharacterPosition(initialPosition)
-      setCharacterRotation({ x: 0, y: Math.PI, z: 0 })
-      
-      const targetY = size.y * 0.75
-      const dist = size.y / (2 * Math.tan(cameraRef.current.fov * Math.PI / 180 / 2))
-      setCameraPosition({ x: 0, y: targetY, z: dist * 1.1 })
-      setCameraTarget({ x: 0, y: targetY, z: 0 })
-      
-      console.log('🔄 위치 리셋 완료')
+      console.log('🔄 사용자 지정 위치로 리셋 완료')
     }
   }
 
