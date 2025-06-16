@@ -1,17 +1,17 @@
-// 애니메이션 캐싱을 위한 IndexedDB 유틸리티
+// VRM 캐릭터 모델 캐싱을 위한 IndexedDB 유틸리티
 
-const DB_NAME = 'AmicaAnimationCache'
+const DB_NAME = 'AmicaVRMCache'
 const DB_VERSION = 1
-const STORE_NAME = 'animations'
+const STORE_NAME = 'vrm_models'
 
-interface AnimationCacheData {
+interface VRMCacheData {
   url: string
   data: ArrayBuffer
   timestamp: number
   fileSize: number
 }
 
-class AnimationCache {
+class VRMCache {
   private db: IDBDatabase | null = null
 
   async init(): Promise<void> {
@@ -35,14 +35,14 @@ class AnimationCache {
     })
   }
 
-  async saveAnimation(url: string, arrayBuffer: ArrayBuffer): Promise<void> {
+  async saveVRM(url: string, arrayBuffer: ArrayBuffer): Promise<void> {
     if (!this.db) await this.init()
     
     return new Promise((resolve, reject) => {
       const transaction = this.db!.transaction([STORE_NAME], 'readwrite')
       const store = transaction.objectStore(STORE_NAME)
       
-      const data: AnimationCacheData = {
+      const data: VRMCacheData = {
         url: url,
         data: arrayBuffer,
         timestamp: Date.now(),
@@ -52,14 +52,14 @@ class AnimationCache {
       const request = store.put(data)
       request.onsuccess = () => {
         const sizeInfo = this.formatFileSize(arrayBuffer.byteLength)
-        console.log(`✅ 애니메이션 캐시 저장 완료 [${sizeInfo}]: ${url}`)
+        console.log(`✅ VRM 모델 캐시 저장 완료 [${sizeInfo}]: ${url}`)
         resolve()
       }
       request.onerror = () => reject(request.error)
     })
   }
 
-  async getAnimation(url: string): Promise<ArrayBuffer | null> {
+  async getVRM(url: string): Promise<ArrayBuffer | null> {
     if (!this.db) await this.init()
     
     return new Promise((resolve, reject) => {
@@ -70,7 +70,7 @@ class AnimationCache {
       request.onsuccess = () => {
         if (request.result) {
           const sizeInfo = this.formatFileSize(request.result.fileSize)
-          console.log(`📂 애니메이션 캐시에서 로드 [${sizeInfo}]: ${url}`)
+          console.log(`📂 VRM 모델 캐시에서 로드 [${sizeInfo}]: ${url}`)
           resolve(request.result.data)
         } else {
           resolve(null)
@@ -80,7 +80,7 @@ class AnimationCache {
     })
   }
 
-  async hasAnimation(url: string): Promise<boolean> {
+  async hasVRM(url: string): Promise<boolean> {
     if (!this.db) await this.init()
     
     return new Promise((resolve, reject) => {
@@ -102,7 +102,7 @@ class AnimationCache {
       const request = store.clear()
       
       request.onsuccess = () => {
-        console.log('🗑️ 애니메이션 캐시 전체 삭제 완료')
+        console.log('🗑️ VRM 모델 캐시 전체 삭제 완료')
         resolve()
       }
       request.onerror = () => reject(request.error)
@@ -156,6 +156,6 @@ class AnimationCache {
 }
 
 // 싱글톤 인스턴스
-const animationCache = new AnimationCache()
+const vrmCache = new VRMCache()
 
-export default animationCache 
+export default vrmCache 

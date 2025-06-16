@@ -3,8 +3,10 @@ html, body {
   height: 100%;
   margin: 0;
   padding: 0;
+  overflow: hidden; /* 스크롤바 제거 */
 }
 
 #root {
-  height: 100%;
+  width: 100vw;
+  height: 100vh;
 } 
