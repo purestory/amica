@@ -16,7 +16,8 @@ const getDefaultConfig = () => ({
       x: parseFloat(process.env.CHARACTER_ROTATION_X) || 0,
       y: parseFloat(process.env.CHARACTER_ROTATION_Y) || 172,
       z: parseFloat(process.env.CHARACTER_ROTATION_Z) || 0
-    }
+    },
+    model: process.env.CHARACTER_MODEL || 'AvatarSample_B.vrm'
   },
   camera: {
     position: {
@@ -29,6 +30,12 @@ const getDefaultConfig = () => ({
       y: parseFloat(process.env.CAMERA_TARGET_Y) || 1.20,
       z: parseFloat(process.env.CAMERA_TARGET_Z) || 0
     }
+  },
+  background: {
+    type: process.env.BACKGROUND_TYPE || 'color',
+    color: process.env.BACKGROUND_COLOR || '#000000',
+    image: process.env.BACKGROUND_IMAGE || '',
+    videoId: process.env.BACKGROUND_VIDEO_ID || ''
   },
   lastUpdated: new Date().toISOString()
 });
@@ -62,7 +69,8 @@ const readConfigFromEnv = async () => {
           x: parseFloat(envVars.CHARACTER_ROTATION_X) || 0,
           y: parseFloat(envVars.CHARACTER_ROTATION_Y) || 172,
           z: parseFloat(envVars.CHARACTER_ROTATION_Z) || 0
-        }
+        },
+        model: envVars.CHARACTER_MODEL || 'AvatarSample_B.vrm'
       },
       camera: {
         position: {
@@ -76,6 +84,12 @@ const readConfigFromEnv = async () => {
           z: parseFloat(envVars.CAMERA_TARGET_Z) || 0
         }
       },
+             background: {
+         type: envVars.BACKGROUND_TYPE || 'color',
+         color: envVars.BACKGROUND_COLOR || '#000000',
+         image: envVars.BACKGROUND_IMAGE || '',
+         videoId: envVars.BACKGROUND_VIDEO_ID || ''
+       },
       lastUpdated: new Date().toISOString()
     };
 
@@ -106,12 +120,17 @@ const updateEnvFile = async (config) => {
       'CHARACTER_ROTATION_X': config.character.rotation.x.toString(),
       'CHARACTER_ROTATION_Y': config.character.rotation.y.toString(),
       'CHARACTER_ROTATION_Z': config.character.rotation.z.toString(),
+      'CHARACTER_MODEL': config.character.model || 'AvatarSample_B.vrm',
       'CAMERA_POSITION_X': config.camera.position.x.toString(),
       'CAMERA_POSITION_Y': config.camera.position.y.toString(),
       'CAMERA_POSITION_Z': config.camera.position.z.toString(),
       'CAMERA_TARGET_X': config.camera.target.x.toString(),
       'CAMERA_TARGET_Y': config.camera.target.y.toString(),
-      'CAMERA_TARGET_Z': config.camera.target.z.toString()
+      'CAMERA_TARGET_Z': config.camera.target.z.toString(),
+             'BACKGROUND_TYPE': config.background.type || 'color',
+       'BACKGROUND_COLOR': config.background.color || '#000000',
+       'BACKGROUND_IMAGE': config.background.image || '',
+       'BACKGROUND_VIDEO_ID': config.background.videoId || ''
     };
 
     // 기존 .env 내용을 라인별로 분리
@@ -167,7 +186,7 @@ exports.getPosition = async (req, res) => {
 // POST /api/position - 위치 설정 저장 (.env 파일에만 저장)
 exports.savePosition = async (req, res) => {
   try {
-    const { character, camera } = req.body;
+    const { character, camera, background } = req.body;
     
     // 입력 데이터 검증
     if (!character || !camera) {
@@ -189,7 +208,8 @@ exports.savePosition = async (req, res) => {
           x: parseFloat(character.rotation?.x) || 0,
           y: parseFloat(character.rotation?.y) || 0,
           z: parseFloat(character.rotation?.z) || 0
-        }
+        },
+        model: character.model || 'AvatarSample_B.vrm'
       },
       camera: {
         position: {
@@ -202,7 +222,13 @@ exports.savePosition = async (req, res) => {
           y: parseFloat(camera.target?.y) || 0,
           z: parseFloat(camera.target?.z) || 0
         }
-      }
+      },
+             background: {
+         type: background?.type || 'color',
+         color: background?.color || '#000000',
+         image: background?.image || '',
+         videoId: background?.videoId || ''
+       }
     };
     
     const success = await updateEnvFile(config);
@@ -274,6 +300,82 @@ exports.getDefaultPosition = async (req, res) => {
       success: false,
       error: 'Internal Server Error',
       message: '기본 위치 설정 조회에 실패했습니다.'
+    });
+  }
+};
+
+// GET /api/position/models - 사용 가능한 VRM 모델 목록 조회
+exports.getAvailableModels = async (req, res) => {
+  try {
+    const modelsDir = path.join(__dirname, '../../../frontend/public/vrm');
+    const files = await fs.readdir(modelsDir);
+    const vrmFiles = files.filter(file => file.endsWith('.vrm'));
+    
+    const models = vrmFiles.map(file => ({
+      filename: file,
+      name: file.replace('.vrm', '').replace(/([A-Z])/g, ' $1').trim(),
+      path: `/vrm/${file}`
+    }));
+    
+    res.json({
+      success: true,
+      data: models,
+      message: '사용 가능한 VRM 모델 목록을 조회했습니다.'
+    });
+  } catch (error) {
+    console.error('VRM 모델 목록 조회 실패:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal Server Error',
+      message: 'VRM 모델 목록 조회에 실패했습니다.'
+    });
+  }
+};
+
+// GET /api/position/backgrounds - 사용 가능한 배경 이미지 목록 조회
+exports.getAvailableBackgrounds = async (req, res) => {
+  try {
+    const bgDir = path.join(__dirname, '../../../frontend/dist/bg');
+    const files = await fs.readdir(bgDir);
+    
+    // 원본 이미지 파일들만 필터링 (thumb- 제외)
+    const originalFiles = files.filter(file => 
+      (file.endsWith('.jpg') || file.endsWith('.jpeg') || 
+       file.endsWith('.png') || file.endsWith('.gif') || file.endsWith('.webp')) &&
+      !file.startsWith('thumb-')
+    );
+    
+    const backgrounds = originalFiles.map(file => {
+      const baseName = file.replace(/\.(jpg|jpeg|png|gif|webp)$/i, '');
+      const thumbnailFile = `thumb-${file}`;
+      const displayName = baseName.replace(/^bg-/, '').replace(/[-_]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      
+      return {
+        id: baseName,
+        filename: file,
+        name: displayName,
+        path: `/bg/${file}`,
+        thumbnail: `/bg/${thumbnailFile}`,
+        category: baseName.includes('landscape') ? 'landscape' : 
+                 baseName.includes('room') ? 'indoor' :
+                 baseName.includes('forest') ? 'nature' :
+                 baseName.includes('sunset') ? 'nature' :
+                 baseName.includes('town') ? 'urban' :
+                 baseName.includes('arbius') ? 'fantasy' : 'other'
+      };
+    });
+    
+    res.json({
+      success: true,
+      data: backgrounds,
+      message: '사용 가능한 배경 이미지 목록을 조회했습니다.'
+    });
+  } catch (error) {
+    console.error('배경 이미지 목록 조회 실패:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal Server Error',
+      message: '배경 이미지 목록 조회에 실패했습니다.'
     });
   }
 }; 

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import animationCache from '../lib/animationCache'
-import vrmCache from '../lib/vrmCache'
+import fileCache from '../utils/fileCache'
 
 const AnimationCachePanel = () => {
   const [cacheInfo, setCacheInfo] = useState({ 
@@ -13,46 +12,57 @@ const AnimationCachePanel = () => {
   const [vrmDetails, setVrmDetails] = useState([])
   const [showDetails, setShowDetails] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [isCollapsed, setIsCollapsed] = useState(true) // 기본적으로 접힌 상태
 
   // 모든 애니메이션 URL 목록
   const allAnimationUrls = [
-    '/amica/animations/dance.vrma',
-    '/amica/animations/greeting.vrma', 
-    '/amica/animations/idle_loop.vrma',
-    '/amica/animations/modelPose.vrma',
-    '/amica/animations/peaceSign.vrma',
-    '/amica/animations/shoot.vrma',
-    '/amica/animations/showFullBody.vrma',
-    '/amica/animations/spin.vrma',
-    '/amica/animations/squat.vrma'
+    '/animations/dance.vrma',
+    '/animations/greeting.vrma', 
+    '/animations/idle_loop.vrma',
+    '/animations/modelPose.vrma',
+    '/animations/peaceSign.vrma',
+    '/animations/shoot.vrma',
+    '/animations/showFullBody.vrma',
+    '/animations/spin.vrma',
+    '/animations/squat.vrma'
   ]
 
   // VRM 모델 URL 목록  
   const allVRMUrls = [
-    '/amica/vrm/AvatarSample_A.vrm',
-    '/amica/vrm/AvatarSample_B.vrm',
-    '/amica/vrm/AvatarSample_C.vrm',
-    '/amica/vrm/AvatarSample_D.vrm'
+    '/vrm/AvatarSample_A.vrm',
+    '/vrm/AvatarSample_B.vrm',
+    '/vrm/AvatarSample_C.vrm',
+    '/vrm/AvatarSample_D.vrm'
   ]
 
   // 캐시 정보 업데이트
   const updateCacheInfo = async () => {
     setIsLoading(true)
     try {
-      // 애니메이션 캐시 정보
-      const animationSize = await animationCache.getCacheSize()
-      const hasIdle = await animationCache.hasAnimation('/amica/animations/idle_loop.vrma')
+      // 통합 파일 캐시 정보
+      const cacheSize = await fileCache.getCacheSize()
       
-      // VRM 모델 캐시 정보
-      const vrmSize = await vrmCache.getCacheSize()
-      const hasCurrentVRM = await vrmCache.hasVRM('/amica/vrm/AvatarSample_B.vrm')
+      // 특정 파일들 확인
+      const hasIdle = await fileCache.hasFile('/animations/idle_loop.vrma')
+      const hasCurrentVRM = await fileCache.hasFile('/vrm/AvatarSample_B.vrm')
       
-      setCacheInfo({ animationSize, vrmSize, hasIdle, hasCurrentVRM })
+      // 애니메이션과 VRM 파일 개수 계산
+      const animationFiles = cacheSize.files.filter(f => f.url.includes('/animations/'))
+      const vrmFiles = cacheSize.files.filter(f => f.url.includes('/vrm/'))
+      
+      setCacheInfo({ 
+        animationSize: animationFiles.length, 
+        vrmSize: vrmFiles.length, 
+        hasIdle, 
+        hasCurrentVRM,
+        totalSize: cacheSize.formattedSize,
+        totalFiles: cacheSize.fileCount
+      })
 
       // 각 애니메이션의 캐시 상태 확인
       const animDetails = []
       for (const url of allAnimationUrls) {
-        const isCached = await animationCache.hasAnimation(url)
+        const isCached = await fileCache.hasFile(url)
         const fileName = url.split('/').pop()
         animDetails.push({ fileName, url, isCached, type: 'animation' })
       }
@@ -61,7 +71,7 @@ const AnimationCachePanel = () => {
       // 각 VRM 모델의 캐시 상태 확인
       const vrmDetailsList = []
       for (const url of allVRMUrls) {
-        const isCached = await vrmCache.hasVRM(url)
+        const isCached = await fileCache.hasFile(url)
         const fileName = url.split('/').pop()
         vrmDetailsList.push({ fileName, url, isCached, type: 'vrm' })
       }
@@ -74,16 +84,16 @@ const AnimationCachePanel = () => {
     }
   }
 
-  // 애니메이션 캐시 삭제 처리
-  const handleClearAnimationCache = async () => {
-    if (confirm('정말로 모든 애니메이션 캐시를 삭제하시겠습니까?')) {
+  // 전체 캐시 삭제 처리
+  const handleClearAllCache = async () => {
+    if (confirm('정말로 모든 파일 캐시를 삭제하시겠습니까?')) {
       setIsLoading(true)
       try {
-        await animationCache.clearCache()
+        await fileCache.clearCache()
         await updateCacheInfo()
-        alert('애니메이션 캐시가 성공적으로 삭제되었습니다!')
+        alert('모든 파일 캐시가 성공적으로 삭제되었습니다!')
       } catch (error) {
-        console.error('애니메이션 캐시 삭제 실패:', error)
+        console.error('캐시 삭제 실패:', error)
         alert('캐시 삭제 중 오류가 발생했습니다.')
       } finally {
         setIsLoading(false)
@@ -91,17 +101,57 @@ const AnimationCachePanel = () => {
     }
   }
 
-  // VRM 모델 캐시 삭제 처리
-  const handleClearVRMCache = async () => {
-    if (confirm('정말로 모든 VRM 모델 캐시를 삭제하시겠습니까?')) {
+  // 애니메이션 캐시 삭제
+  const handleClearAnimationCache = async () => {
+    if (confirm('애니메이션 캐시를 삭제하시겠습니까?')) {
       setIsLoading(true)
       try {
-        await vrmCache.clearCache()
+        // 애니메이션 파일들만 삭제
+        for (const url of allAnimationUrls) {
+          await fileCache.deleteFile(url)
+        }
+        await updateCacheInfo()
+        alert('애니메이션 캐시가 성공적으로 삭제되었습니다!')
+      } catch (error) {
+        console.error('애니메이션 캐시 삭제 실패:', error)
+        alert('애니메이션 캐시 삭제 중 오류가 발생했습니다.')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+  }
+
+  // VRM 캐시 삭제
+  const handleClearVRMCache = async () => {
+    if (confirm('VRM 모델 캐시를 삭제하시겠습니까?')) {
+      setIsLoading(true)
+      try {
+        // VRM 파일들만 삭제
+        for (const url of allVRMUrls) {
+          await fileCache.deleteFile(url)
+        }
         await updateCacheInfo()
         alert('VRM 모델 캐시가 성공적으로 삭제되었습니다!')
       } catch (error) {
         console.error('VRM 캐시 삭제 실패:', error)
-        alert('캐시 삭제 중 오류가 발생했습니다.')
+        alert('VRM 캐시 삭제 중 오류가 발생했습니다.')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+  }
+
+  // 캐시 정리 (오래된 파일 삭제)
+  const handleCleanupCache = async () => {
+    if (confirm('7일 이상 사용하지 않은 캐시를 정리하시겠습니까?')) {
+      setIsLoading(true)
+      try {
+        const result = await fileCache.cleanupCache()
+        await updateCacheInfo()
+        alert(`캐시 정리 완료: ${result.deletedCount}개 파일 삭제`)
+      } catch (error) {
+        console.error('캐시 정리 실패:', error)
+        alert('캐시 정리 중 오류가 발생했습니다.')
       } finally {
         setIsLoading(false)
       }
@@ -117,26 +167,75 @@ const AnimationCachePanel = () => {
     return () => clearInterval(interval)
   }, [])
 
+  // 접힌 상태일 때 간단한 버튼만 표시
+  if (isCollapsed) {
+    return (
+      <div style={{
+        background: 'rgba(0, 0, 0, 0.8)',
+        color: 'white',
+        padding: '8px 12px',
+        borderRadius: '8px',
+        fontSize: '12px',
+        zIndex: 1000,
+        fontFamily: 'monospace',
+        cursor: 'pointer',
+        border: '1px solid rgba(255,255,255,0.2)'
+      }}
+      onClick={() => setIsCollapsed(false)}
+      title="캐시 패널 열기"
+      >
+        💾 캐시 ({cacheInfo.totalFiles || 0})
+      </div>
+    );
+  }
+
   return (
     <div style={{
-      position: 'fixed',
-      top: '20px',
-      right: '20px',
-      background: 'rgba(0, 0, 0, 0.8)',
+      background: 'rgba(0, 0, 0, 0.9)',
       color: 'white',
-      padding: '15px',
+      padding: '0',
       borderRadius: '8px',
       fontSize: '14px',
       minWidth: '300px',
       maxWidth: '400px',
       zIndex: 1000,
-      fontFamily: 'monospace'
+      fontFamily: 'monospace',
+      border: '1px solid rgba(255,255,255,0.2)',
+      overflow: 'hidden'
     }}>
-      <div style={{ marginBottom: '10px', fontSize: '16px', fontWeight: 'bold' }}>
-        💾 파일 캐시 상태
+      {/* 헤더 */}
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        padding: '12px 15px',
+        background: 'rgba(255,255,255,0.1)',
+        borderBottom: '1px solid rgba(255,255,255,0.1)'
+      }}>
+        <div style={{ fontSize: '14px', fontWeight: 'bold' }}>
+          💾 파일 캐시 상태
+        </div>
+        <button
+          onClick={() => setIsCollapsed(true)}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: 'rgba(255,255,255,0.7)',
+            cursor: 'pointer',
+            fontSize: '12px',
+            padding: '4px'
+          }}
+          title="접기"
+        >
+          ✕
+        </button>
       </div>
       
+      {/* 내용 */}
+      <div style={{ padding: '15px' }}>
+      
       <div style={{ marginBottom: '10px' }}>
+        <div>📁 전체 캐시: {cacheInfo.totalFiles || 0}개 ({cacheInfo.totalSize || '0 B'})</div>
         <div>🎭 애니메이션: {cacheInfo.animationSize}개 / {allAnimationUrls.length}개</div>
         <div>🤖 VRM 모델: {cacheInfo.vrmSize}개 / {allVRMUrls.length}개</div>
         <div>🔄 Idle: {cacheInfo.hasIdle ? '✅' : '❌'}</div>
@@ -245,6 +344,7 @@ const AnimationCachePanel = () => {
       
       <div style={{ fontSize: '10px', marginTop: '8px', opacity: 0.7 }}>
         💡 파일들은 필요할 때 자동으로 캐시됩니다
+      </div>
       </div>
     </div>
   )

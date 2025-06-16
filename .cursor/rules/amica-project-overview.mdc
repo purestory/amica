@@ -1,0 +1,200 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Amica AI Assistant 프로젝트 개요
+
+## 🎯 **프로젝트 목적**
+VRM 캐릭터 기반 AI 어시스턴트 시스템으로, 3D 아바타와 상호작용할 수 있는 웹 애플리케이션
+
+## 🏗️ **아키텍처 구조**
+
+### 1. **백엔드 (Express.js)**
+- **위치**: [backend/](mdc:backend)
+- **포트**: 3101
+- **주요 기능**:
+  - VRM 파일 관리 API
+  - 애니메이션 파일 관리 API  
+  - 배경 이미지 관리 API
+  - 포지션 데이터 저장/로드
+  - 파일 업로드/다운로드
+
+**핵심 파일들**:
+- [backend/src/server.js](mdc:backend/src/server.js) - 메인 서버
+- [backend/src/controllers/positionController.js](mdc:backend/src/controllers/positionController.js) - 포지션 API
+- [backend/package.json](mdc:backend/package.json) - 백엔드 의존성
+
+### 2. **프론트엔드 (React + Three.js + VRM)**
+- **위치**: [frontend/](mdc:frontend)
+- **빌드 도구**: Vite
+- **주요 기능**:
+  - VRM 캐릭터 렌더링
+  - 애니메이션 재생
+  - 배경 이미지 관리
+  - 설정 패널 UI
+  - 파일 캐싱 시스템
+
+**핵심 파일들**:
+- [frontend/src/components/SettingsPanel.jsx](mdc:frontend/src/components/SettingsPanel.jsx) - 메인 설정 UI
+- [frontend/src/lib/loadVRM.ts](mdc:frontend/src/lib/loadVRM.ts) - VRM 로더
+- [frontend/src/lib/loadVRMAnimation.ts](mdc:frontend/src/lib/loadVRMAnimation.ts) - 애니메이션 로더
+- [frontend/src/utils/fileCache.js](mdc:frontend/src/utils/fileCache.js) - 통합 파일 캐시
+- [frontend/src/utils/assetPreloader.js](mdc:frontend/src/utils/assetPreloader.js) - 에셋 미리 로드
+
+### 3. **인프라 (Nginx + SSL)**
+- **도메인**: amica.ai-open.kr
+- **SSL**: Let's Encrypt 인증서
+- **프록시**: `/amica-api/` → 백엔드 3101 포트
+- **정적 파일**: 프론트엔드 빌드 파일 서빙
+
+## 🔄 **API 엔드포인트**
+
+### 백엔드 API (포트 3101)
+```
+GET  /api/positions          # 저장된 포지션 목록
+POST /api/positions          # 포지션 저장
+GET  /api/positions/:id      # 특정 포지션 조회
+PUT  /api/positions/:id      # 포지션 업데이트
+DELETE /api/positions/:id    # 포지션 삭제
+
+GET  /vrm/                   # VRM 파일 목록
+GET  /animations/            # 애니메이션 파일 목록
+GET  /bg/                    # 배경 이미지 목록 (썸네일/원본 분리)
+```
+
+### 프론트엔드 API 호출
+```
+/amica-api/positions         # nginx 리라이트로 /api/positions 호출
+/vrm/                        # 직접 파일 접근
+/animations/                 # 직접 파일 접근
+/bg/                         # 직접 파일 접근
+```
+
+## 💾 **파일 캐싱 시스템**
+
+### 통합 캐시 ([frontend/src/utils/fileCache.js](mdc:frontend/src/utils/fileCache.js))
+- **저장소**: IndexedDB
+- **정책**: 파일 타입별 스마트 캐싱
+- **정리**: 7일 자동 정리
+
+### 캐싱 정책
+```javascript
+// VRM 파일: 무조건 캐시 (15MB, 13MB 등 대용량)
+if (url.includes('.vrm')) return true;
+
+// 애니메이션: 무조건 캐시 (1.3MB-154KB)
+if (url.includes('.vrma')) return true;
+
+// JS 번들: 무조건 캐시 (889KB)
+if (url.includes('/assets/') && url.includes('.js')) return true;
+
+// CSS 파일: 무조건 캐시
+if (url.includes('/assets/') && url.includes('.css')) return true;
+
+// 배경 이미지: 200KB 이상만 캐시 (썸네일 제외)
+if (url.includes('/bg/') && !url.includes('thumb-')) {
+  return fileSize >= 200 * 1024;
+}
+```
+
+## 🎨 **UI 컴포넌트 구조**
+
+### 메인 설정 패널 ([frontend/src/components/SettingsPanel.jsx](mdc:frontend/src/components/SettingsPanel.jsx))
+- VRM 캐릭터 선택
+- 애니메이션 선택  
+- 배경 이미지 선택 (카테고리별 정렬)
+- 캐시 관리 패널
+
+### 배경 이미지 시스템
+- **썸네일**: `thumb-` 접두사 (빠른 로딩)
+- **원본**: 선택 시 로드
+- **카테고리**: landscape, indoor, nature, urban, fantasy
+
+## 🚀 **배포 및 서비스**
+
+### 서비스 관리
+- **서비스명**: `amica-backend.service` (기존) 또는 `amica.service`
+- **실행 모드**: 프로덕션 (`npm run start`)
+- **로그**: systemd journal
+
+### 빌드 프로세스
+```bash
+# 프론트엔드 빌드
+cd frontend && npm run build
+
+# 백엔드는 소스 직접 실행 (빌드 불필요)
+cd backend && npm run start
+```
+
+## 🔧 **개발 환경**
+
+### 필수 도구
+- Node.js v22.14.0 (nvm 관리)
+- npm (패키지 관리)
+- nginx (프록시 서버)
+- certbot (SSL 인증서)
+
+### 개발 서버 실행
+```bash
+# 백엔드 개발 서버
+cd backend && npm run dev  # nodemon 사용
+
+# 프론트엔드 개발 서버  
+cd frontend && npm run dev  # Vite 개발 서버 (포트 5173)
+```
+
+## 📁 **디렉토리 구조**
+```
+/home/purestory/amica/
+├── backend/                 # Express.js 백엔드
+│   ├── src/
+│   │   ├── server.js       # 메인 서버
+│   │   └── controllers/    # API 컨트롤러
+│   ├── userdata/           # 사용자 데이터
+│   └── package.json
+├── frontend/               # React 프론트엔드
+│   ├── src/
+│   │   ├── components/     # React 컴포넌트
+│   │   ├── lib/           # VRM/애니메이션 로더
+│   │   └── utils/         # 유틸리티 (캐시 등)
+│   ├── dist/              # 빌드된 정적 파일
+│   └── package.json
+├── tmp/                   # 임시 파일 (nginx 설정 등)
+└── backup/               # 백업 파일들
+```
+
+## 🎯 **주요 기능**
+
+### 1. **VRM 캐릭터 시스템**
+- 3D VRM 모델 로딩 및 렌더링
+- 캐릭터 포즈 및 표정 제어
+- 실시간 애니메이션 재생
+
+### 2. **애니메이션 시스템**  
+- VRMA 애니메이션 파일 지원
+- 루프 애니메이션 및 원샷 애니메이션
+- 애니메이션 캐싱으로 빠른 재생
+
+### 3. **배경 관리**
+- 다양한 카테고리의 배경 이미지
+- 썸네일/원본 분리로 빠른 미리보기
+- 대용량 이미지 캐싱
+
+### 4. **성능 최적화**
+- IndexedDB 기반 파일 캐싱
+- 스마트 캐싱 정책 (파일 타입별)
+- 백그라운드 에셋 프리로딩
+- 7일 자동 캐시 정리
+
+## ⚠️ **중요 주의사항**
+
+1. **서비스 중복 방지**: `amica.service`와 `amica-backend.service` 동시 실행 금지
+2. **포트 충돌 방지**: 3101 포트 사용 전 기존 프로세스 확인 필수
+3. **캐시 정책**: 번들 파일과 대용량 에셋은 무조건 캐시
+4. **SSL 인증서**: 90일마다 자동 갱신 (certbot)
+5. **nginx 설정**: sites-enabled에 백업 파일 생성 금지
+
+---
+
+**이 프로젝트는 VRM 기반 AI 어시스턴트의 완전한 웹 구현체입니다.**

@@ -39,16 +39,8 @@ const copyAssetsPlugin = () => {
         }
       })
       
-      // VRM 파일 복사
-      try {
-        copyFileSync(
-          resolve(__dirname, '../backup/public/vrm/AvatarSample_B.vrm'),
-          resolve(vrmDir, 'AvatarSample_B.vrm')
-        )
-        console.log('✅ 복사됨: AvatarSample_B.vrm')
-      } catch (err) {
-        console.warn('⚠️ VRM 파일 복사 실패:', err.message)
-      }
+      // VRM 파일들은 public 폴더에서 자동으로 복사됨
+      console.log('✅ VRM 파일들은 public/vrm 폴더에서 자동으로 복사됩니다')
     }
   }
 }
@@ -56,7 +48,7 @@ const copyAssetsPlugin = () => {
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react(), copyAssetsPlugin()],
-  base: '/amica/',
+  base: '/',
   server: {
     port: 5173,
     host: true

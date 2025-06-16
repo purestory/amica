@@ -14,4 +14,10 @@ router.put('/reset', positionController.resetPosition);
 // GET /api/position/default - 기본 위치 설정 조회
 router.get('/default', positionController.getDefaultPosition);
 
+// GET /api/position/models - 사용 가능한 VRM 모델 목록 조회
+router.get('/models', positionController.getAvailableModels);
+
+// GET /api/position/backgrounds - 사용 가능한 배경 이미지 목록 조회
+router.get('/backgrounds', positionController.getAvailableBackgrounds);
+
 module.exports = router; 
