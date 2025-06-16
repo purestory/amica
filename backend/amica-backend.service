@@ -1,0 +1,20 @@
+[Unit]
+Description=Amica Backend API Server
+After=network.target
+
+[Service]
+Type=simple
+User=purestory
+WorkingDirectory=/home/purestory/amica/backend
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/node src/server.js
+Restart=always
+RestartSec=10
+
+# 로그 설정
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=amica-backend
+
+[Install]
+WantedBy=multi-user.target 
